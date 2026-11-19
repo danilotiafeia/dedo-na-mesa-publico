@@ -666,6 +666,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   );
   const RANDOM_POOL = ICONS.filter(i => !i.random).map(i => i.id);
   const isRandom = () => settings.icon === 'aleatorio';
+  const DROP_GAP = 110; // ms entre a queda de um símbolo e o próximo
   const iconById = id => ICONS.find(i => i.id === id) || ICONS[0];
   const iconSvg = (id, F, O = DARK) => `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="-4 -4 108 108">${iconById(id).svg(F, O)}</svg>`;
   const imgCache = new Map();
@@ -701,14 +702,6 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {}
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && fingers.size) keepAwake(); });
-
-  // modo Aleatório: um símbolo diferente para cada dedo na mesa
-  function pickIcon() {
-    const used = new Set([...fingers.values()].map(f => f.icon));
-    const free = RANDOM_POOL.filter(id => !used.has(id));
-    const pool = free.length ? free : RANDOM_POOL;
-    return pool[rand(pool.length)];
-  }
 
   function pickColor() {
     const used = new Map(PALETTE.map(c => [c, 0]));
@@ -772,7 +765,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     $('icon-preview').innerHTML = iconSvg(settings.icon, BRAND);
     $('icon-name').textContent = iconById(settings.icon).name;
     $('icon-note').textContent = isRandom()
-      ? 'Cada dedo ganha um símbolo diferente assim que toca a mesa. No fim, todos ficam e o vencedor ganha destaque.'
+      ? 'No fim do sorteio, cada dedo recebe um símbolo diferente. Todos ficam na mesa e o vencedor ganha destaque.'
       : 'O mesmo ícone marca os times, na cor de cada time.';
     grid.querySelectorAll('.icon-opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.icon === settings.icon)));
     vignette = null;
@@ -829,7 +822,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const now = performance.now();
     if (phase === 'result') return; // rodada em andamento: espera todo mundo tirar o dedo
     if (result) { oldResult = { res: result, at: now }; result = null; setStatusInk(INK); } // nova rodada apaga a anterior
-    fingers.set(e.pointerId, { id: e.pointerId, x: e.clientX, y: e.clientY, color: pickColor(), born: now, wob: Math.random() * TAU, icon: isRandom() ? pickIcon() : null });
+    fingers.set(e.pointerId, { id: e.pointerId, x: e.clientX, y: e.clientY, color: pickColor(), born: now, wob: Math.random() * TAU });
     buzz(12);
     keepAwake();
     onFingersChanged(now);
@@ -877,19 +870,22 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 
   function resolve(now) {
     const list = shuffle([...fingers.values()]);
-    const marks = list.map((f, i) => ({ id: f.id, x: f.x, y: f.y, born: f.born, wob: f.wob, color: f.color, icon: f.icon, order: i, liftedAt: 0, winner: false, team: null }));
-    const random = marks.some(m => m.icon);
+    const random = isRandom();
+    // Aleatório: cada dedo recebe um símbolo diferente só agora, no fim da contagem
+    const pool = random ? shuffle(RANDOM_POOL.slice()) : [];
+    const marks = list.map((f, i) => ({ id: f.id, x: f.x, y: f.y, born: f.born, wob: f.wob, color: f.color, icon: random ? pool[i % pool.length] : null, order: i, liftedAt: 0, winner: false, team: null }));
+    // os símbolos caem um a um; depois disso o vencedor é revelado
+    const revealAt = now + (random ? marks.length * DROP_GAP + 450 : 0);
     if (settings.mode === 'winner') {
       const k = Math.min(settings.winners, marks.length - 1);
       marks.slice(0, k).forEach((m, i) => { m.winner = true; m.rank = i; });
-      result = { mode: 'winner', at: now, marks, count: k, random };
-      if (k === 1) setStatusInk(readableOn(marks[0].color));
+      result = { mode: 'winner', at: now, revealAt, marks, count: k, random };
     } else {
       const t = settings.teams;
       // rodízio com a ordem dos times sorteada: quem fica com um jogador a mais também é aleatório
       const teamOrder = shuffle([...Array(t).keys()]);
       marks.forEach((m, i) => { m.team = teamOrder[i % t]; });
-      result = { mode: 'teams', at: now, marks, count: t, random };
+      result = { mode: 'teams', at: now, revealAt, marks, count: t, random };
     }
     phase = 'result';
     buzz([70, 50, 140]);
@@ -1060,24 +1056,27 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const drawPill = (x, y, team, alpha, scale) => drawLabel(x, y, team.name.toUpperCase(), team.color, DARK, alpha, scale);
   const drawWinnerTag = (x, y, alpha) => drawLabel(x, y, 'VENCEDOR', BRAND, '#ffffff', alpha, 1);
 
-  // modo Aleatório: a ficha do dedo fica logo acima dele
+  // modo Aleatório: a ficha do dedo fica logo acima dele e "cai" no fim do sorteio
   const fingerBadgeY = (m, R) => aboveY(m, baseRadius() * 1.05, R + 10);
-  function drawFingerBadge(f, now, R) {
-    const appear = clamp((now - f.born - 120) / 520);
-    if (appear <= 0) return;
-    const drop = (1 - easeOutBack(appear)) * -50; // o símbolo "cai" no dedo
-    drawBadge(f.x, fingerBadgeY(f, R) + drop, R, f.color, clamp(appear * 3), f.icon);
-  }
+  const dropIn = (m, t) => {
+    const a = clamp((t - m.order * DROP_GAP) / 500);
+    return { alpha: clamp(a * 3), dy: a > 0 ? (1 - easeOutBack(a)) * -55 : -55 };
+  };
 
   function drawWinnerResult(res, now, fade, r0) {
-    const t = now - res.at, e = easeInOutCubic(clamp(t / 750));
+    const t0 = now - res.at;            // desde o fim da contagem
+    const t = now - res.revealAt;       // desde a revelação do vencedor (igual a t0 fora do Aleatório)
+    const e = easeInOutCubic(clamp(t / 750));
     const winners = res.marks.filter(m => m.winner);
     const single = winners.length === 1;
     const R = badgeRadius(r0), sc = settings.scale;
+    if (t < 0) { // símbolos ainda caindo: os anéis continuam acesos
+      for (const m of res.marks) if (!m.liftedAt) drawToken(m, m.color, now, r0, fade, 0, 1);
+    }
     const Rw = res.random ? R * 1.25 : R;
 
     // brilho: a cor do vencedor inunda a mesa e depois some
-    if (single) {
+    if (single && t >= 0) {
       const w = winners[0], f = 1 - clamp((t - 1100) / 800);
       if (f > 0) {
         const maxD = Math.hypot(Math.max(w.x, W - w.x), Math.max(w.y, H - w.y));
@@ -1086,32 +1085,32 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
         ctx.beginPath(); ctx.arc(w.x, w.y, maxD * easeInOutCubic(clamp(t / 700)) + 1, 0, TAU); ctx.fill();
         ctx.restore();
       }
-    } else {
+    } else if (t >= 0) {
       const f = 1 - clamp(t / 700);
       if (f > 0) { ctx.fillStyle = rgba(INK, .35 * f * fade); ctx.fillRect(0, 0, W, H); }
     }
 
-    for (const m of res.marks) if (!m.winner && t < 800) drawToken(m, m.color, now, r0, fade * (1 - e), 0, 1 - .6 * e);
+    if (t >= 0) for (const m of res.marks) if (!m.winner && t < 800) drawToken(m, m.color, now, r0, fade * (1 - e), 0, 1 - .6 * e);
 
     // Aleatório: os símbolos de quem não ganhou continuam na mesa, menores e apagados
     if (res.random) {
       for (const m of res.marks) {
         if (m.winner) continue;
-        const from = fingerBadgeY(m, R);
+        const d = dropIn(m, t0), from = fingerBadgeY(m, R) + d.dy;
         const g = m.liftedAt ? easeOutCubic(clamp((now - m.liftedAt) / 450)) : 0;
-        drawBadge(m.x, from + (m.y - from) * g, R * (1 - .2 * e), m.color, fade * (1 - .55 * e), m.icon);
+        drawBadge(m.x, from + (m.y - from) * g, R * (1 - .2 * e), m.color, fade * (1 - .55 * e) * d.alpha, m.icon);
       }
     }
 
     winners.forEach((w, i) => {
       const appear = res.random ? 1 : clamp((t - 350 - i * 200) / 650);
-      const pop = easeOutBack(clamp(t / 750));
+      const pop = t > 0 ? easeOutBack(clamp(t / 750)) : 0;
       const grow = 1 + .3 * pop;
       const r = r0 * grow;
       const fromY = aboveY(w, r0 * 1.3, Rw + 12);
       const halo = res.random ? INK : null;
       if (!w.liftedAt) {
-        const flooding = single && t < 1900;
+        const flooding = single && t >= 0 && t < 1900;
         if (flooding) {
           const on = readableOn(w.color);
           drawWaves(w.x, w.y, r, on, fade * e, t);
@@ -1125,10 +1124,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
           drawToken(w, w.color, now, r0, fade, 0, grow);
         }
         if (res.random) {
-          // a ficha que já estava no dedo cresce e sobe um pouco
-          const from = fingerBadgeY(w, R);
+          // a ficha cai no dedo e, na revelação, cresce e sobe um pouco
+          const d = dropIn(w, t0), from = fingerBadgeY(w, R) + d.dy;
           const y = from + (fromY - from) * e, rr = R + (Rw - R) * pop;
-          drawBadge(w.x, y, rr, w.color, fade, w.icon, halo);
+          drawBadge(w.x, y, rr, w.color, fade * d.alpha, w.icon, t >= 0 ? halo : null);
           const ty = y - rr * 1.22 - 20 * sc;
           drawWinnerTag(w.x, ty > 24 ? ty : y + rr * 1.22 + 20 * sc, fade * e);
         } else if (appear > 0) {
@@ -1141,8 +1140,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
         const y = fromY + (w.y - fromY) * g;
         drawGlow(w.x, w.y, Rw, w.color, fade * g);
         drawWaves(w.x, w.y, Rw * 1.1, w.color, fade * g * .8, t);
-        drawBadge(w.x, y, Rw, w.color, fade * Math.max(clamp(appear * 3), g), w.icon, halo);
-        if (res.random) {
+        drawBadge(w.x, y, Rw, w.color, fade * Math.max(clamp(appear * 3), g), w.icon, t >= 0 ? halo : null);
+        if (res.random && t >= 0) {
           const by = y + Rw * 1.22 + 20 * sc;
           drawWinnerTag(w.x, by < H - 16 ? by : y - Rw * 1.22 - 20 * sc, fade);
         }
@@ -1162,7 +1161,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       const color = k <= 0 ? m.color : mix(m.color, team.color, kt);
       if (!m.liftedAt) {
         const r = drawToken(m, color, now, r0, fade, 0, 1 + .28 * Math.sin(Math.PI * k)) || r0;
-        if (res.random) drawBadge(m.x, fingerBadgeY(m, R), R, color, fade, m.icon);
+        if (res.random) { const d = dropIn(m, t); drawBadge(m.x, fingerBadgeY(m, R) + d.dy, R, color, fade * d.alpha, m.icon); }
         else if (k > 0) pills.push([m.x, aboveY(m, r, 30 * sc), team, fade * kt, .8 + .2 * kt]);
       } else {
         // dedo saiu: fica uma ficha com o ícone na cor do time
@@ -1204,8 +1203,6 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (phase !== 'result') {
       const p = phase === 'counting' ? clamp((now - countStart) / countMs) : 0;
       for (const f of fingers.values()) drawToken(f, f.color, now, r0, 1, p, 1);
-      const R = badgeRadius(r0);
-      for (const f of fingers.values()) if (f.icon) drawFingerBadge(f, now, R);
     }
   }
 
@@ -1217,7 +1214,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       if (sec !== lastSecond) { lastSecond = sec; setCount(sec); if (sec > 0 && sec <= 3) buzz(8); }
       if (el >= countMs) resolve(now);
     }
-    if (result && result.mode === 'winner' && result.count === 1 && now - result.at > 1500) setStatusInk(INK);
+    if (result && result.mode === 'winner' && result.count === 1) {
+      const dt = now - result.revealAt, w = result.marks.find(m => m.winner);
+      setStatusInk(dt >= 0 && dt < 1500 && w ? readableOn(w.color) : INK);
+    }
     if (screen === 'draw') draw(now);
     else if (screen === 'clock') clockTick(now);
     requestAnimationFrame(frame);
