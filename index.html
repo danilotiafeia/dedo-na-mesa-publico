@@ -256,6 +256,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .player-row{display:flex;align-items:center;gap:.75rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:1rem;background:rgba(0,0,0,.22)}
 .swatch{width:2.3rem;height:2.3rem;border-radius:50%;border:3px solid rgba(240,246,246,.85);flex:none;cursor:pointer;padding:0}
 .player-row b{font-weight:800;font-size:1rem}
+.player-info{display:grid;gap:.35rem;justify-items:start}
+.player-row .stepper{padding:3px}
+.player-row .stepper button{width:2rem;height:2rem;font-size:1.2rem}
+.player-row .stepper output{min-width:4.3rem;font-size:.9rem}
 .player-row .mini{width:2.5rem;height:2.5rem;margin-left:auto;flex:none}
 .player-row .mini svg{width:100%;height:100%}
 .remove{width:2.3rem;height:2.3rem;border-radius:50%;border:0;background:rgba(240,246,246,.1);color:var(--ink);font:inherit;font-size:1.3rem;line-height:1;cursor:pointer;flex:none}
@@ -455,19 +459,11 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   <div class="screen-inner">
     <header>
       <h2 class="screen-title" id="dice-title">Dados</h2>
-      <p class="screen-sub">Todos os jogadores usam os mesmos dados, cada um na sua cor.</p>
+      <p class="screen-sub">Todos usam o mesmo tipo de dado, cada um na sua cor. A quantidade é escolhida por jogador.</p>
     </header>
     <section>
       <h3 class="label">Faces</h3>
       <div class="chips" id="face-chips" role="group" aria-label="Faces do dado"></div>
-    </section>
-    <section>
-      <h3 class="label">Quantidade por jogador</h3>
-      <div class="pill-group stepper" role="group" aria-label="Quantidade de dados">
-        <button id="qty-dec" type="button" aria-label="Menos dados">−</button>
-        <output id="qty-val" aria-live="polite">1 dado</output>
-        <button id="qty-inc" type="button" aria-label="Mais dados">+</button>
-      </div>
     </section>
     <section>
       <h3 class="label">Jogadores</h3>
@@ -636,7 +632,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple', timerSecs: 30, alarm: true, dice: { faces: 6, qty: 1, colors: ['#e8433a'] } };
+  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple', timerSecs: 30, alarm: true, dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -678,11 +674,17 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const d = src.dice;
     if (d && typeof d === 'object') {
       if (FACES.includes(d.faces)) settings.dice.faces = d.faces;
-      if (Number.isInteger(d.qty)) settings.dice.qty = clamp(d.qty, 1, MAX_QTY);
-      if (Array.isArray(d.colors)) {
-        const cols = d.colors.filter((c, i, a) => DICE_COLORS.includes(c) && a.indexOf(c) === i).slice(0, MAX_PLAYERS);
-        if (cols.length) settings.dice.colors = cols;
+      // versões antigas guardavam só as cores e uma quantidade para todos
+      const list = Array.isArray(d.players) ? d.players
+        : Array.isArray(d.colors) ? d.colors.map(c => ({ color: c, qty: d.qty })) : [];
+      const seen = new Set(), players = [];
+      for (const pl of list) {
+        if (!pl || !DICE_COLORS.includes(pl.color) || seen.has(pl.color)) continue;
+        seen.add(pl.color);
+        players.push({ color: pl.color, qty: Number.isInteger(pl.qty) ? clamp(pl.qty, 1, MAX_QTY) : 1 });
+        if (players.length === MAX_PLAYERS) break;
       }
+      if (players.length) settings.dice.players = players;
     }
   }
 
@@ -1342,24 +1344,26 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const b = e.target.closest('.chip');
     if (b) { D().faces = Number(b.dataset.faces); diceChanged(); }
   });
-  $('qty-dec').addEventListener('click', () => { D().qty = clamp(D().qty - 1, 1, MAX_QTY); diceChanged(); });
-  $('qty-inc').addEventListener('click', () => { D().qty = clamp(D().qty + 1, 1, MAX_QTY); diceChanged(); });
   $('add-player').addEventListener('click', () => {
-    const cols = D().colors;
-    if (cols.length >= MAX_PLAYERS) return;
-    cols.push(DICE_COLORS.find(c => !cols.includes(c)));
+    const pls = D().players;
+    if (pls.length >= MAX_PLAYERS) return;
+    const used = pls.map(p => p.color);
+    pls.push({ color: DICE_COLORS.find(c => !used.includes(c)), qty: 1 });
     diceChanged();
   });
   $('players').addEventListener('click', e => {
     const row = e.target.closest('.player-row');
     if (!row) return;
-    const i = Number(row.dataset.i), cols = D().colors;
-    if (e.target.closest('.remove') && cols.length > 1) { cols.splice(i, 1); diceChanged(); return; }
+    const i = Number(row.dataset.i), pls = D().players, pl = pls[i];
+    if (e.target.closest('.remove') && pls.length > 1) { pls.splice(i, 1); diceChanged(); return; }
+    if (e.target.closest('.qty-dec')) { pl.qty = clamp(pl.qty - 1, 1, MAX_QTY); diceChanged(); return; }
+    if (e.target.closest('.qty-inc')) { pl.qty = clamp(pl.qty + 1, 1, MAX_QTY); diceChanged(); return; }
     if (e.target.closest('.swatch')) {
       // próxima cor que ninguém está usando
-      let k = DICE_COLORS.indexOf(cols[i]);
-      for (let n = 0; n < DICE_COLORS.length; n++) { k = (k + 1) % DICE_COLORS.length; if (!cols.includes(DICE_COLORS[k])) break; }
-      cols[i] = DICE_COLORS[k];
+      const used = pls.map(p => p.color);
+      let k = DICE_COLORS.indexOf(pl.color);
+      for (let n = 0; n < DICE_COLORS.length; n++) { k = (k + 1) % DICE_COLORS.length; if (!used.includes(DICE_COLORS[k])) break; }
+      pl.color = DICE_COLORS[k];
       diceChanged();
     }
   });
@@ -1367,41 +1371,45 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   $('roll-back').addEventListener('click', () => goBack('dice'));
 
   function renderDiceSetup() {
-    const { faces, qty, colors } = D();
+    const { faces, players } = D();
     $('face-chips').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.faces) === faces)));
-    $('qty-val').textContent = plural(qty, 'dado', 'dados');
-    $('qty-dec').disabled = qty <= 1;
-    $('qty-inc').disabled = qty >= MAX_QTY;
-    $('players').innerHTML = colors.map((c, i) => `
+    $('players').innerHTML = players.map((p, i) => `
       <div class="player-row" data-i="${i}">
-        <button type="button" class="swatch" style="background:${c}" aria-label="Trocar a cor do Jogador ${i + 1}"></button>
-        <b>Jogador ${i + 1}</b>
-        <span class="mini" aria-hidden="true">${dieSvg(faces, faces === 6 ? 6 : faces, c)}</span>
-        ${colors.length > 1 ? `<button type="button" class="remove" aria-label="Remover Jogador ${i + 1}">×</button>` : ''}
+        <button type="button" class="swatch" style="background:${p.color}" aria-label="Trocar a cor do Jogador ${i + 1}"></button>
+        <div class="player-info">
+          <b>Jogador ${i + 1}</b>
+          <div class="pill-group stepper" role="group" aria-label="Dados do Jogador ${i + 1}">
+            <button type="button" class="qty-dec" aria-label="Menos dados para o Jogador ${i + 1}" ${p.qty <= 1 ? 'disabled' : ''}>−</button>
+            <output aria-live="polite">${plural(p.qty, 'dado', 'dados')}</output>
+            <button type="button" class="qty-inc" aria-label="Mais dados para o Jogador ${i + 1}" ${p.qty >= MAX_QTY ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+        <span class="mini" aria-hidden="true">${dieSvg(faces, faces, p.color)}</span>
+        ${players.length > 1 ? `<button type="button" class="remove" aria-label="Remover Jogador ${i + 1}">×</button>` : ''}
       </div>`).join('');
-    $('add-player').disabled = colors.length >= MAX_PLAYERS;
-    $('dice-go').textContent = `Ir para a mesa · ${qty}d${faces}`;
+    $('add-player').disabled = players.length >= MAX_PLAYERS;
+    $('dice-go').textContent = `Ir para a mesa · d${faces}`;
   }
 
   function dieSize(qty) { return qty <= 3 ? '5rem' : qty <= 6 ? '4.1rem' : '3.4rem'; }
   function sumHtml(i) {
     const r = rolls[i];
     if (!r) return 'Ainda não rolou';
-    return D().qty > 1 ? `Soma <b>${r.reduce((a, b) => a + b, 0)}</b>` : '';
+    return r.length > 1 ? `Soma <b>${r.reduce((a, b) => a + b, 0)}</b>` : '';
   }
   function renderRoll() {
-    const { faces, qty, colors } = D();
-    $('roll-title').textContent = `${qty}d${faces}`;
-    $('roll-sub').textContent = colors.length === 1 ? '1 jogador' : `${colors.length} jogadores`;
-    $('roll-list').innerHTML = colors.map((c, i) => {
-      const vals = rolls[i] || Array(qty).fill(null);
-      return `<section class="roll-card" data-player="${i}" style="--pc:${c};--pc-ink:${readableOn(c)};--ds:${dieSize(qty)}">
+    const { faces, players } = D();
+    $('roll-title').textContent = `d${faces}`;
+    $('roll-sub').textContent = players.length === 1 ? '1 jogador' : `${players.length} jogadores`;
+    $('roll-list').innerHTML = players.map((p, i) => {
+      const vals = rolls[i] || Array(p.qty).fill(null);
+      return `<section class="roll-card" data-player="${i}" style="--pc:${p.color};--pc-ink:${readableOn(p.color)};--ds:${dieSize(p.qty)}">
         <div class="roll-card-head">
           <span class="who">Jogador ${i + 1}</span>
           <span class="sum" aria-live="polite">${sumHtml(i)}</span>
           <button type="button" class="roll-btn" data-roll="${i}">Rolada</button>
         </div>
-        <div class="dice-row">${vals.map(v => `<span class="die">${dieSvg(faces, v, c)}</span>`).join('')}</div>
+        <div class="dice-row">${vals.map(v => `<span class="die">${dieSvg(faces, v, p.color)}</span>`).join('')}</div>
       </section>`;
     }).join('');
   }
@@ -1409,13 +1417,13 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const b = e.target.closest('.roll-btn');
     if (b) rollPlayer(Number(b.dataset.roll), 0);
   });
-  $('roll-all').addEventListener('click', () => { D().colors.forEach((_, i) => rollPlayer(i, i * 70)); });
+  $('roll-all').addEventListener('click', () => { D().players.forEach((_, i) => rollPlayer(i, i * 70)); });
 
   function rollPlayer(i, delay) {
     if (rolling.has(i)) return;
     const card = $('roll-list').querySelector(`[data-player="${i}"]`);
     if (!card) return;
-    const { faces, qty } = D(), color = D().colors[i];
+    const faces = D().faces, { color, qty } = D().players[i];
     const final = Array.from({ length: qty }, () => rand(faces) + 1);
     const els = [...card.querySelectorAll('.die')];
     const btn = card.querySelector('.roll-btn'), sumEl = card.querySelector('.sum');
