@@ -41,7 +41,7 @@ body{
 
 .hud{
   position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
-  padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 16px);
+  padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 5.6rem) calc(env(safe-area-inset-left) + 16px);
 }
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:2.75rem;transition:opacity .25s}
 .brand{font-family:var(--font-display);font-size:1.375rem;letter-spacing:.02em;display:flex;align-items:center;gap:.5rem}
@@ -69,7 +69,7 @@ body[data-phase="result"] .status{top:calc(env(safe-area-inset-top) + 1.1rem)}
 
 .hint{
   position:fixed;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:.9rem;
-  padding:0 1.75rem 9rem;pointer-events:none;transition:opacity .25s;opacity:0
+  padding:0 1.75rem 14rem;pointer-events:none;transition:opacity .25s;opacity:0
 }
 body[data-phase="idle"][data-touching="false"][data-showing="false"] .hint{opacity:1}
 .hint-rings{position:relative;width:150px;height:96px;margin-bottom:6px}
@@ -161,6 +161,154 @@ body[data-touching="true"] .topbar *{pointer-events:none}
   background:rgba(0,0,0,.25);color:var(--ink);display:flex;gap:.5rem;align-items:center;justify-content:center;cursor:pointer
 }
 .wide-btn svg{width:1.1rem;height:1.1rem}
+/* Barra de abas */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  padding:6px calc(env(safe-area-inset-right) + 10px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 10px);
+  background:rgba(8,20,15,.94);border-top:1px solid var(--line);transition:opacity .25s
+}
+.tab{
+  font:inherit;font-size:.78rem;font-weight:800;color:var(--muted);background:transparent;border:0;border-radius:14px;
+  padding:.45rem 0 .35rem;display:grid;justify-items:center;gap:.2rem;cursor:pointer
+}
+.tab svg{width:1.5rem;height:1.5rem}
+.tab[aria-current="page"]{color:var(--ink);background:rgba(243,236,221,.08)}
+.tab[aria-current="page"] svg{color:var(--accent)}
+body[data-screen="clock"] .tabbar,
+body[data-screen="roll"] .tabbar{display:none}
+body[data-screen="draw"]:not([data-phase="idle"]) .tabbar,
+body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:none}
+
+/* Telas de ferramentas */
+.screen{
+  position:fixed;inset:0;z-index:4;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;
+  background:radial-gradient(120% 80% at 50% 25%,#17382b 0%,var(--felt) 55%,#0a1913 100%);
+  padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px) calc(env(safe-area-inset-bottom) + 6.5rem) calc(env(safe-area-inset-left) + 18px)
+}
+.screen input{-webkit-user-select:text;user-select:text}
+.screen-inner{max-width:30rem;margin:0 auto;display:grid;gap:1.5rem}
+.screen-title{font-family:var(--font-display);font-weight:400;font-size:2.1rem;margin:0;line-height:1.05}
+.screen-sub{margin:.35rem 0 0;color:var(--muted);font-size:.95rem;line-height:1.45;max-width:36ch}
+.label{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 .6rem}
+.primary{
+  font:inherit;font-weight:800;font-size:1rem;background:var(--accent);color:#1d1606;border:0;border-radius:999px;
+  padding:.75rem 1.3rem;min-height:2.9rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem
+}
+.primary.wide{width:100%}
+.primary svg{width:1.2rem;height:1.2rem}
+.ghost-btn{
+  font:inherit;font-weight:800;font-size:.95rem;color:var(--ink);background:rgba(0,0,0,.28);border:1px solid var(--line);
+  border-radius:999px;padding:.5rem 1rem;min-height:2.6rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer
+}
+.ghost-btn svg{width:1.1rem;height:1.1rem}
+.ghost-btn[aria-pressed="false"]{opacity:.6}
+
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.preset{
+  font:inherit;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);border-radius:1rem;
+  padding:.9rem .3rem .7rem;display:grid;justify-items:center;gap:.15rem;cursor:pointer
+}
+.preset b{font-family:var(--font-display);font-weight:400;font-size:1.9rem;font-variant-numeric:tabular-nums;line-height:1}
+.preset small{font-size:.8rem;color:var(--muted);font-weight:700}
+.preset.is-last{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.custom{display:flex;align-items:flex-end;gap:.6rem;flex-wrap:wrap}
+.field{display:grid;gap:.3rem;font-size:.8rem;font-weight:700;color:var(--muted)}
+.field input{
+  width:5.2rem;font:inherit;font-family:var(--font-display);font-size:1.7rem;color:var(--ink);background:rgba(0,0,0,.3);
+  border:1px solid var(--line);border-radius:.8rem;padding:.35rem .5rem;text-align:center
+}
+.field input:focus{outline:3px solid var(--accent);outline-offset:1px}
+.colon{font-family:var(--font-display);font-size:1.7rem;padding-bottom:.5rem}
+.error{color:#ff9b8f;font-size:.85rem;font-weight:700;margin:.5rem 0 0}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1rem;border:1px solid var(--line);border-radius:1rem;background:rgba(0,0,0,.25)}
+.toggle-row b{display:block;font-size:1rem}
+.toggle-row small{display:block;color:var(--muted);font-size:.85rem;margin-top:.15rem}
+.switch{position:relative;width:3.4rem;height:2rem;border-radius:999px;border:0;background:rgba(243,236,221,.2);cursor:pointer;flex:none;padding:0}
+.switch::after{content:"";position:absolute;top:.25rem;left:.25rem;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--ink);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(1.4rem);background:#1d1606}
+
+/* Relógio da ampulheta */
+#screen-clock{display:grid;place-items:center;overflow:hidden;touch-action:none;padding:0}
+.clock-glass{position:absolute;left:0;right:0;top:5%;width:100%;height:90%;opacity:.17;pointer-events:none}
+.clock-flash{position:absolute;inset:0;background:var(--accent);opacity:0;pointer-events:none}
+#screen-clock.is-ringing .clock-flash{animation:ringbg .5s steps(1,end) infinite}
+#screen-clock.is-ringing .clock-digits{animation:ringtx .5s steps(1,end) infinite}
+@keyframes ringbg{0%{opacity:.92}50%{opacity:0}100%{opacity:0}}
+@keyframes ringtx{0%{color:#1d1606}50%{color:var(--ink)}100%{color:var(--ink)}}
+.clock-top{
+  position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:calc(env(safe-area-inset-left) + 16px);right:calc(env(safe-area-inset-right) + 16px);
+  display:flex;justify-content:space-between;align-items:center;gap:.6rem;z-index:2
+}
+.clock-center{position:relative;z-index:1;display:grid;justify-items:center;gap:.6rem;pointer-events:none}
+.clock-digits{
+  font-family:var(--font-display);font-size:min(34vw,46vh);line-height:1;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;text-shadow:0 6px 30px rgba(0,0,0,.45);transition:color .3s
+}
+.clock-digits.long{font-size:min(26vw,40vh)}
+#screen-clock.is-low .clock-digits{color:#ff8a7a}
+.clock-hint{margin:0;font-weight:800;font-size:1.05rem;color:var(--muted);text-align:center;padding:0 1rem}
+.clock-bottom{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 22px);display:flex;justify-content:center;z-index:2;padding:0 18px}
+.clock-bottom .primary{min-width:12rem;font-size:1.1rem;min-height:3.2rem}
+
+/* Dados */
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{
+  font:inherit;font-weight:800;font-size:.9rem;color:var(--ink);background:rgba(0,0,0,.25);border:1px solid var(--line);
+  border-radius:.9rem;padding:.45rem .35rem .35rem;display:grid;justify-items:center;gap:.15rem;min-width:3.7rem;cursor:pointer
+}
+.chip svg{width:2.1rem;height:2.1rem}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:rgba(245,195,48,.14);box-shadow:inset 0 0 0 1px var(--accent)}
+.players{display:grid;gap:.5rem}
+.player-row{display:flex;align-items:center;gap:.75rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:1rem;background:rgba(0,0,0,.22)}
+.swatch{width:2.3rem;height:2.3rem;border-radius:50%;border:3px solid rgba(243,236,221,.85);flex:none;cursor:pointer;padding:0}
+.player-row b{font-weight:800;font-size:1rem}
+.player-row .mini{width:2.5rem;height:2.5rem;margin-left:auto;flex:none}
+.player-row .mini svg{width:100%;height:100%}
+.remove{width:2.3rem;height:2.3rem;border-radius:50%;border:0;background:rgba(243,236,221,.1);color:var(--ink);font:inherit;font-size:1.3rem;line-height:1;cursor:pointer;flex:none}
+.add-player{
+  width:100%;margin-top:.5rem;font:inherit;font-weight:800;font-size:.95rem;color:var(--ink);background:transparent;
+  border:1.5px dashed rgba(243,236,221,.35);border-radius:1rem;padding:.75rem;cursor:pointer
+}
+.add-player:disabled{opacity:.35;cursor:default}
+.roll-head{display:flex;align-items:center;gap:.8rem}
+.roll-head .screen-title{font-size:1.7rem}
+.roll-head small{display:block;color:var(--muted);font-size:.85rem;font-weight:700}
+.roll-list{display:grid;gap:.8rem}
+.roll-card{
+  --pc:#e8433a;--pc-ink:#14100a;
+  border:1px solid var(--line);border-left:6px solid var(--pc);border-radius:1rem;background:rgba(0,0,0,.24);
+  padding:.75rem .8rem .85rem;display:grid;gap:.65rem
+}
+.roll-card-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.roll-card-head .who{font-weight:800;font-size:1rem}
+.roll-card-head .sum{color:var(--muted);font-weight:800;font-size:.95rem}
+.roll-card-head .sum b{color:var(--ink);font-family:var(--font-display);font-weight:400;font-size:1.3rem;vertical-align:-.1em}
+.roll-btn{
+  margin-left:auto;font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:999px;padding:.55rem 1.2rem;
+  background:var(--pc);color:var(--pc-ink);cursor:pointer;min-height:2.75rem;box-shadow:0 3px 0 rgba(0,0,0,.35)
+}
+.roll-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.roll-btn:disabled{opacity:.6}
+.dice-row{display:flex;flex-wrap:wrap;gap:.55rem}
+.die{width:var(--ds,4.25rem);height:var(--ds,4.25rem);display:block;filter:drop-shadow(0 4px 5px rgba(0,0,0,.4))}
+.die svg{width:100%;height:100%;display:block}
+.die.rolling{animation:tumble .34s linear infinite}
+.die.landed{animation:land .28s ease-out}
+@keyframes tumble{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(90deg) translateY(-8%)}50%{transform:rotate(180deg) translateY(0)}75%{transform:rotate(270deg) translateY(-8%)}100%{transform:rotate(360deg) translateY(0)}}
+@keyframes land{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+.roll-all{
+  position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;
+  padding:.7rem calc(env(safe-area-inset-right) + 18px) calc(env(safe-area-inset-bottom) + .8rem) calc(env(safe-area-inset-left) + 18px);
+  background:rgba(8,20,15,.95);border-top:1px solid var(--line)
+}
+.roll-all .primary{max-width:30rem;font-size:1.1rem;min-height:3.2rem}
+@media (prefers-reduced-motion: reduce){
+  #screen-clock.is-ringing .clock-flash{animation:none;opacity:.5}
+  #screen-clock.is-ringing .clock-digits{animation:none}
+  .die.rolling,.die.landed{animation:none}
+}
+
 [hidden]{display:none !important}
 
 @media (prefers-reduced-motion: reduce){
@@ -168,7 +316,7 @@ body[data-touching="true"] .topbar *{pointer-events:none}
 }
 </style>
 </head>
-<body data-phase="idle" data-touching="false" data-showing="false">
+<body data-screen="draw" data-phase="idle" data-touching="false" data-showing="false">
 <canvas id="table" aria-label="Mesa: coloque os dedos aqui"></canvas>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -255,6 +403,109 @@ body[data-touching="true"] .topbar *{pointer-events:none}
   </div>
 </div>
 
+<!-- Ampulheta: escolha do tempo -->
+<section class="screen" id="screen-timer" hidden aria-labelledby="timer-title">
+  <div class="screen-inner">
+    <header>
+      <h2 class="screen-title" id="timer-title">Ampulheta</h2>
+      <p class="screen-sub">Escolha o tempo do turno. Na tela seguinte, toque em qualquer lugar para começar.</p>
+    </header>
+    <section>
+      <h3 class="label">Tempos prontos</h3>
+      <div class="presets" id="presets"></div>
+    </section>
+    <section>
+      <h3 class="label">Outro tempo</h3>
+      <form class="custom" id="custom-form" novalidate>
+        <label class="field" for="custom-min">Minutos<input id="custom-min" type="number" inputmode="numeric" min="0" max="99" value="3"></label>
+        <span class="colon" aria-hidden="true">:</span>
+        <label class="field" for="custom-sec">Segundos<input id="custom-sec" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
+        <button class="primary" type="submit">Usar este tempo</button>
+      </form>
+      <p class="error" id="custom-error" role="alert" hidden></p>
+    </section>
+    <div class="toggle-row">
+      <div><b>Alarme ao terminar</b><small>Apita por 3 segundos quando o tempo acaba.</small></div>
+      <button class="switch" id="alarm-switch" type="button" role="switch" aria-checked="true" aria-label="Alarme ao terminar"></button>
+    </div>
+  </div>
+</section>
+
+<!-- Ampulheta: relógio em tela cheia -->
+<section class="screen" id="screen-clock" hidden aria-label="Ampulheta">
+  <svg class="clock-glass" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs>
+      <clipPath id="clip-top"><rect id="sand-top" x="0" y="21" width="100" height="27"/></clipPath>
+      <clipPath id="clip-bot"><rect id="sand-bot" x="0" y="79" width="100" height="0"/></clipPath>
+    </defs>
+    <path d="M30 21 H70 C69 37 56 43 50 48 C44 43 31 37 30 21 Z" fill="#f5c330" clip-path="url(#clip-top)"/>
+    <path d="M30 79 C31 64 44 57 50 52 C56 57 69 64 70 79 Z" fill="#f5c330" clip-path="url(#clip-bot)"/>
+    <line id="sand-stream" x1="50" y1="47" x2="50" y2="79" stroke="#f5c330" stroke-width="1.2" opacity="0"/>
+    <path d="M27 18 H73 C73 38 58 44 56 50 C58 56 73 62 73 82 H27 C27 62 42 56 44 50 C42 44 27 38 27 18 Z" fill="none" stroke="#f3ecdd" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="18" y="10" width="64" height="8" rx="2.5" fill="#f3ecdd"/>
+    <rect x="18" y="82" width="64" height="8" rx="2.5" fill="#f3ecdd"/>
+  </svg>
+  <div class="clock-flash" aria-hidden="true"></div>
+  <div class="clock-top">
+    <button class="ghost-btn" id="clock-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Tempos</button>
+    <button class="ghost-btn" id="clock-alarm" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span id="clock-alarm-label">Alarme ligado</span></button>
+  </div>
+  <div class="clock-center">
+    <div class="clock-digits" id="clock-digits" role="timer">0:30</div>
+    <p class="clock-hint" id="clock-hint">Toque na tela para começar</p>
+  </div>
+  <div class="clock-bottom"><button class="primary" id="clock-reset" type="button" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Reiniciar</button></div>
+</section>
+
+<!-- Dados: configuração -->
+<section class="screen" id="screen-dice" hidden aria-labelledby="dice-title">
+  <div class="screen-inner">
+    <header>
+      <h2 class="screen-title" id="dice-title">Dados</h2>
+      <p class="screen-sub">Todos os jogadores usam os mesmos dados, cada um na sua cor.</p>
+    </header>
+    <section>
+      <h3 class="label">Faces</h3>
+      <div class="chips" id="face-chips" role="group" aria-label="Faces do dado"></div>
+    </section>
+    <section>
+      <h3 class="label">Quantidade por jogador</h3>
+      <div class="pill-group stepper" role="group" aria-label="Quantidade de dados">
+        <button id="qty-dec" type="button" aria-label="Menos dados">−</button>
+        <output id="qty-val" aria-live="polite">1 dado</output>
+        <button id="qty-inc" type="button" aria-label="Mais dados">+</button>
+      </div>
+    </section>
+    <section>
+      <h3 class="label">Jogadores</h3>
+      <div class="players" id="players"></div>
+      <button class="add-player" id="add-player" type="button">+ Adicionar jogador</button>
+      <p class="note">Toque na bolinha para trocar a cor. Até 6 jogadores.</p>
+    </section>
+    <button class="primary wide" id="dice-go" type="button">Ir para a mesa</button>
+  </div>
+</section>
+
+<!-- Dados: mesa -->
+<section class="screen" id="screen-roll" hidden aria-labelledby="roll-title">
+  <div class="screen-inner">
+    <div class="roll-head">
+      <button class="ghost-btn" id="roll-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Ajustar</button>
+      <div><h2 class="screen-title" id="roll-title">1d6</h2><small id="roll-sub">por jogador</small></div>
+    </div>
+    <div class="roll-list" id="roll-list"></div>
+  </div>
+  <div class="roll-all"><button class="primary wide" id="roll-all" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>Todos</button></div>
+</section>
+
+<nav class="tabbar" aria-label="Ferramentas">
+  <button class="tab" type="button" data-go="draw" aria-current="page"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#meeple" fill="currentColor"/></svg>Sorteio</button>
+  <button class="tab" type="button" data-go="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12M7.5 3c0 5 4.5 6 4.5 9s-4.5 4-4.5 9M16.5 3c0 5-4.5 6-4.5 9s4.5 4 4.5 9"/></svg>Ampulheta</button>
+  <button class="tab" type="button" data-go="dice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor"/></svg>Dados</button>
+</nav>
+
 <script>
 (() => {
   const TAU = Math.PI * 2;
@@ -271,6 +522,10 @@ body[data-touching="true"] .topbar *{pointer-events:none}
   const LIMITS = { winner: [1, 4], teams: [2, 4] };
   const INK = '#f3ecdd', DARK = '#14100a', CREAM = '#f3ecdd';
   const STORE_KEY = 'sorteador-tf';
+  const PRESETS = [30, 45, 60, 90, 120];
+  const FACES = [2, 3, 4, 6, 8, 10, 12, 20, 100];
+  const DICE_COLORS = ['#e8433a', '#3c83db', '#3fae5a', '#f5c330', '#8e5bd8', '#f08a24', '#e8579a', '#2bb3c0', '#ede6da', '#b98552'];
+  const MAX_PLAYERS = 6, MAX_QTY = 10;
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MEEPLE_D = document.getElementById('meeple').getAttribute('d');
 
@@ -389,7 +644,7 @@ body[data-touching="true"] .topbar *{pointer-events:none}
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple' };
+  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple', timerSecs: 30, alarm: true, dice: { faces: 6, qty: 1, colors: ['#e8433a'] } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -426,6 +681,17 @@ body[data-touching="true"] .topbar *{pointer-events:none}
     if (TIMES.includes(src.seconds)) settings.seconds = src.seconds;
     if (SCALES.includes(src.scale)) settings.scale = src.scale;
     if (ICONS.some(i => i.id === src.icon)) settings.icon = src.icon;
+    if (Number.isInteger(src.timerSecs) && src.timerSecs >= 1 && src.timerSecs <= 5999) settings.timerSecs = src.timerSecs;
+    if (typeof src.alarm === 'boolean') settings.alarm = src.alarm;
+    const d = src.dice;
+    if (d && typeof d === 'object') {
+      if (FACES.includes(d.faces)) settings.dice.faces = d.faces;
+      if (Number.isInteger(d.qty)) settings.dice.qty = clamp(d.qty, 1, MAX_QTY);
+      if (Array.isArray(d.colors)) {
+        const cols = d.colors.filter((c, i, a) => DICE_COLORS.includes(c) && a.indexOf(c) === i).slice(0, MAX_PLAYERS);
+        if (cols.length) settings.dice.colors = cols;
+      }
+    }
   }
 
   function renderSettings() {
@@ -844,8 +1110,344 @@ body[data-touching="true"] .topbar *{pointer-events:none}
       if (el >= countMs) resolve(now);
     }
     if (result && result.mode === 'winner' && result.count === 1 && now - result.at > 1500) setStatusInk(INK);
-    draw(now);
+    if (screen === 'draw') draw(now);
+    else if (screen === 'clock') clockTick(now);
     requestAnimationFrame(frame);
+  }
+
+  // ---------- navegação entre telas ----------
+  // Cada tela tem um #nome, então o botão voltar do celular funciona.
+  const HASH_BY_SCREEN = { draw: 'sorteio', timer: 'ampulheta', clock: 'ampulheta-relogio', dice: 'dados', roll: 'dados-mesa' };
+  const SCREEN_BY_HASH = Object.fromEntries(Object.entries(HASH_BY_SCREEN).map(([k, v]) => [v, k]));
+  const PANELS = { timer: $('screen-timer'), clock: $('screen-clock'), dice: $('screen-dice'), roll: $('screen-roll') };
+  const tabs = [...document.querySelectorAll('.tab')];
+  let screen = 'draw', pushedSub = false;
+
+  function go(s) {
+    const h = HASH_BY_SCREEN[s];
+    if (location.hash.slice(1) === h) show(s); else location.hash = h;
+  }
+  function goBack(parent) {
+    if (pushedSub) { pushedSub = false; history.back(); }
+    else location.replace('#' + HASH_BY_SCREEN[parent]);
+  }
+  window.addEventListener('hashchange', () => show(SCREEN_BY_HASH[location.hash.slice(1)] || 'draw'));
+  tabs.forEach(t => t.addEventListener('click', () => { pushedSub = false; go(t.dataset.go); }));
+
+  function show(s) {
+    if (screen === 'clock' && s !== 'clock') clockReset();
+    if (s !== 'clock' && s !== 'roll') pushedSub = false;
+    screen = s;
+    body.dataset.screen = s;
+    for (const [name, el] of Object.entries(PANELS)) el.hidden = name !== s;
+    const tabFor = s === 'clock' ? 'timer' : s === 'roll' ? 'dice' : s;
+    tabs.forEach(t => { if (t.dataset.go === tabFor) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+    if (!sheet.hidden) closeSheet();
+    if (s === 'timer') renderTimerSetup();
+    if (s === 'clock') clockReset();
+    if (s === 'dice') renderDiceSetup();
+    if (s === 'roll') renderRoll();
+    if (s !== 'draw' && PANELS[s]) PANELS[s].scrollTop = 0;
+  }
+
+  // ---------- ampulheta ----------
+  const fmtTime = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  const presetLabel = sec => sec < 60 ? 'segundos' : sec === 60 ? 'minuto' : 'minutos';
+
+  $('presets').innerHTML = PRESETS.map(sec => `<button type="button" class="preset" data-sec="${sec}"><b>${fmtTime(sec)}</b><small>${presetLabel(sec)}</small></button>`).join('');
+  $('presets').addEventListener('click', e => {
+    const b = e.target.closest('.preset');
+    if (b) useTime(Number(b.dataset.sec));
+  });
+  $('custom-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const m = parseInt($('custom-min').value || '0', 10), sec = parseInt($('custom-sec').value || '0', 10);
+    const err = $('custom-error');
+    if (!Number.isFinite(m) || !Number.isFinite(sec) || m < 0 || m > 99 || sec < 0 || sec > 59) {
+      err.textContent = 'Use de 0 a 99 minutos e de 0 a 59 segundos.'; err.hidden = false; return;
+    }
+    const total = m * 60 + sec;
+    if (total < 1) { err.textContent = 'Escolha pelo menos 1 segundo.'; err.hidden = false; return; }
+    err.hidden = true;
+    useTime(total);
+  });
+  function useTime(sec) {
+    settings.timerSecs = sec; save();
+    pushedSub = true;
+    go('clock');
+  }
+  function setAlarm(on) {
+    settings.alarm = on; save();
+    $('alarm-switch').setAttribute('aria-checked', String(on));
+    $('clock-alarm').setAttribute('aria-pressed', String(on));
+    $('clock-alarm-label').textContent = on ? 'Alarme ligado' : 'Alarme desligado';
+  }
+  $('alarm-switch').addEventListener('click', () => setAlarm(!settings.alarm));
+  $('clock-alarm').addEventListener('click', () => { setAlarm(!settings.alarm); if (settings.alarm) unlockAudio(); });
+
+  function renderTimerSetup() {
+    $('presets').querySelectorAll('.preset').forEach(b => b.classList.toggle('is-last', Number(b.dataset.sec) === settings.timerSecs));
+    if (!PRESETS.includes(settings.timerSecs)) {
+      $('custom-min').value = Math.floor(settings.timerSecs / 60);
+      $('custom-sec').value = settings.timerSecs % 60;
+    }
+    $('custom-error').hidden = true;
+    setAlarm(settings.alarm);
+  }
+
+  // som do alarme (Web Audio, liberado no toque que inicia o relógio)
+  let audioCtx = null, alarmOsc = null;
+  function unlockAudio() {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; audioCtx = new AC(); }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) {}
+  }
+  function playAlarm() {
+    try {
+      if (!audioCtx) return;
+      stopAlarm();
+      const t0 = audioCtx.currentTime + .02;
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.0001, t0);
+      for (let i = 0; i < 10; i++) { // 10 bipes em 3 segundos
+        const st = t0 + i * .3;
+        osc.frequency.setValueAtTime(i % 2 ? 660 : 880, st);
+        gain.gain.setValueAtTime(0.0001, st);
+        gain.gain.exponentialRampToValueAtTime(.2, st + .015);
+        gain.gain.setValueAtTime(.2, st + .17);
+        gain.gain.exponentialRampToValueAtTime(0.0001, st + .2);
+      }
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0 + 3);
+      alarmOsc = osc;
+    } catch (e) {}
+  }
+  function stopAlarm() { try { if (alarmOsc) alarmOsc.stop(); } catch (e) {} alarmOsc = null; }
+
+  const clock = { state: 'ready', end: 0, ringUntil: 0 };
+  const clockEl = $('screen-clock'), digitsEl = $('clock-digits');
+  function setDigits(sec) {
+    const txt = fmtTime(sec);
+    if (digitsEl.textContent !== txt) digitsEl.textContent = txt;
+    digitsEl.classList.toggle('long', txt.length > 4);
+  }
+  function setSand(p) {
+    p = clamp(p);
+    $('sand-top').setAttribute('y', 21 + p * 27);
+    $('sand-top').setAttribute('height', 27 * (1 - p));
+    $('sand-bot').setAttribute('y', 79 - p * 27);
+    $('sand-bot').setAttribute('height', 27 * p);
+  }
+  function clockReset() {
+    stopAlarm();
+    clock.state = 'ready';
+    clockEl.classList.remove('is-running', 'is-ringing', 'is-low');
+    setDigits(settings.timerSecs);
+    setSand(0);
+    $('sand-stream').setAttribute('opacity', '0');
+    $('clock-hint').textContent = 'Toque na tela para começar';
+    $('clock-hint').hidden = false;
+    $('clock-reset').hidden = true;
+    setAlarm(settings.alarm);
+  }
+  function clockStart() {
+    if (clock.state !== 'ready') return;
+    unlockAudio();
+    clock.state = 'running';
+    clock.end = performance.now() + settings.timerSecs * 1000;
+    clockEl.classList.add('is-running');
+    $('clock-hint').hidden = true;
+    $('clock-reset').hidden = false;
+    $('sand-stream').setAttribute('opacity', '.9');
+    keepAwake();
+    buzz(15);
+  }
+  function clockTick(now) {
+    if (clock.state === 'running') {
+      const total = settings.timerSecs * 1000, rem = Math.max(0, clock.end - now);
+      const sec = Math.ceil(rem / 1000);
+      setDigits(sec);
+      clockEl.classList.toggle('is-low', sec <= 5);
+      setSand(1 - rem / total);
+      if (rem <= 0) {
+        clock.state = 'ringing';
+        clock.ringUntil = now + 3000;
+        clockEl.classList.remove('is-low');
+        clockEl.classList.add('is-ringing');
+        $('sand-stream').setAttribute('opacity', '0');
+        if (settings.alarm) { playAlarm(); buzz([300, 150, 300, 150, 300, 150, 300]); }
+      }
+    } else if (clock.state === 'ringing' && now >= clock.ringUntil) {
+      clockReset(); // volta ao tempo inicial, pronto para outro toque
+    }
+  }
+  clockEl.addEventListener('click', e => { if (e.target.closest('button')) return; if (clock.state === 'ready') clockStart(); });
+  $('clock-reset').addEventListener('click', clockReset);
+  $('clock-back').addEventListener('click', () => goBack('timer'));
+
+  // ---------- dados ----------
+  // Uma "pele" por tipo de dado: moeda (d2), triângulos (d3/d4), cubo com pintas (d6),
+  // diamante (d8), pipa (d10/d100), dodecaedro (d12) e icosaedro (d20).
+  function dieSvg(faces, value, color) {
+    const edge = darken(color, .38), face = lighten(color, .22);
+    const ink = readableOn(color), inkFace = readableOn(face);
+    const v = value == null ? '?' : String(value);
+    const T = (x, y, size, fill) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-family="'Lilita One','Arial Rounded MT Bold',sans-serif" font-size="${size}" fill="${fill}">${v}</text>`;
+    const L = d => `<path d="${d}" fill="none" stroke="${edge}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>`;
+    const outline = pts => `<polygon points="${pts}" fill="none" stroke="${edge}" stroke-width="5" stroke-linejoin="round"/>`;
+    let b = '';
+    if (faces === 2) {
+      b = `<circle cx="50" cy="50" r="45" fill="${color}" stroke="${edge}" stroke-width="5"/>
+        <circle cx="50" cy="50" r="34" fill="${face}" stroke="${edge}" stroke-width="2.5" opacity=".9"/>${T(50, 51, 40, inkFace)}`;
+    } else if (faces === 3) {
+      b = `<path d="M50 9 Q55 9 58 14.5 L91 74 Q95 86 83 87 L17 87 Q5 86 9 74 L42 14.5 Q45 9 50 9 Z" fill="${color}" stroke="${edge}" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M50 27 L76 77 H24 Z" fill="${face}" opacity=".55"/>${T(50, 62, 32, ink)}`;
+    } else if (faces === 4) {
+      const pts = '50,6 95,89 5,89';
+      b = `<polygon points="${pts}" fill="${color}"/><polygon points="50,62 95,89 5,89" fill="${face}"/>
+        ${L('M50 6 L50 62 M50 62 L5 89 M50 62 L95 89')}${outline(pts)}${T(50, 79, 20, inkFace)}`;
+    } else if (faces === 6) {
+      const P = { tl: [29, 29], tr: [71, 29], ml: [29, 50], mr: [71, 50], bl: [29, 71], br: [71, 71], c: [50, 50] };
+      const L6 = { 1: ['c'], 2: ['tl', 'br'], 3: ['tl', 'c', 'br'], 4: ['tl', 'tr', 'bl', 'br'], 5: ['tl', 'tr', 'c', 'bl', 'br'], 6: ['tl', 'tr', 'ml', 'mr', 'bl', 'br'] };
+      const pips = value == null ? T(50, 52, 40, ink) : L6[value].map(k => `<circle cx="${P[k][0]}" cy="${P[k][1]}" r="8.5" fill="${ink}"/>`).join('');
+      b = `<rect x="6" y="6" width="88" height="88" rx="18" fill="${color}" stroke="${edge}" stroke-width="5"/>
+        <rect x="14" y="14" width="72" height="72" rx="12" fill="${face}" opacity=".45"/>${pips}`;
+    } else if (faces === 8) {
+      const pts = '50,4 95,50 50,96 5,50';
+      b = `<polygon points="${pts}" fill="${color}"/><polygon points="50,11 78,62 22,62" fill="${face}"/>
+        ${L('M22 62 L5 50 M78 62 L95 50 M22 62 L50 96 M78 62 L50 96 M50 11 L50 4')}${outline(pts)}${T(50, 45, v.length > 1 ? 20 : 24, inkFace)}`;
+    } else if (faces === 10 || faces === 100) {
+      const pts = '50,4 95,42 87,70 50,96 13,70 5,42';
+      const size = faces === 100 ? (v.length > 2 ? 14 : 18) : (v.length > 1 ? 20 : 24);
+      b = `<polygon points="${pts}" fill="${color}"/><polygon points="50,11 77,45 50,67 23,45" fill="${face}"/>
+        ${L('M23 45 L5 42 M77 45 L95 42 M50 67 L50 96 M23 45 L13 70 M77 45 L87 70 M50 11 L50 4')}${outline(pts)}${T(50, 42, size, inkFace)}`
+        + (faces === 100 ? `<text x="35" y="78" text-anchor="middle" dominant-baseline="central" font-family="'Lilita One',sans-serif" font-size="12" fill="${ink}">%</text>` : '');
+    } else if (faces === 12) {
+      const pt = (r, a) => [50 + r * Math.cos(a), 51 + r * Math.sin(a)];
+      const outer = [...Array(10)].map((_, k) => pt(46, -Math.PI / 2 + k * Math.PI / 5));
+      const inner = [...Array(5)].map((_, k) => pt(26, -Math.PI / 2 + k * 2 * Math.PI / 5));
+      const P = arr => arr.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const lines = inner.map((p, k) => `M${p[0].toFixed(1)} ${p[1].toFixed(1)} L${outer[k * 2][0].toFixed(1)} ${outer[k * 2][1].toFixed(1)}`).join(' ');
+      b = `<polygon points="${P(outer)}" fill="${color}"/><polygon points="${P(inner)}" fill="${face}"/>${L(lines)}${outline(P(outer))}${T(50, 52, v.length > 1 ? 22 : 26, inkFace)}`;
+    } else {
+      const pts = '50,4 91,27.5 91,72.5 50,96 9,72.5 9,27.5';
+      b = `<polygon points="${pts}" fill="${color}"/><polygon points="50,28 74,69 26,69" fill="${face}"/>
+        ${L('M50 28 L50 4 M50 28 L9 27.5 M50 28 L91 27.5 M26 69 L9 27.5 M26 69 L9 72.5 M26 69 L50 96 M74 69 L91 27.5 M74 69 L91 72.5 M74 69 L50 96')}${outline(pts)}${T(50, 55, v.length > 1 ? 18 : 22, inkFace)}`;
+    }
+    return `<svg viewBox="-3 -3 106 106" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${b}</svg>`;
+  }
+
+  const D = () => settings.dice;
+  let rolls = {}; // resultados da sessão por jogador
+  const rolling = new Set();
+  function diceChanged() { rolls = {}; save(); renderDiceSetup(); }
+
+  $('face-chips').innerHTML = FACES.map(f => `<button type="button" class="chip" data-faces="${f}" aria-pressed="false">${dieSvg(f, f, '#f5c330')}<span>d${f}</span></button>`).join('');
+  $('face-chips').addEventListener('click', e => {
+    const b = e.target.closest('.chip');
+    if (b) { D().faces = Number(b.dataset.faces); diceChanged(); }
+  });
+  $('qty-dec').addEventListener('click', () => { D().qty = clamp(D().qty - 1, 1, MAX_QTY); diceChanged(); });
+  $('qty-inc').addEventListener('click', () => { D().qty = clamp(D().qty + 1, 1, MAX_QTY); diceChanged(); });
+  $('add-player').addEventListener('click', () => {
+    const cols = D().colors;
+    if (cols.length >= MAX_PLAYERS) return;
+    cols.push(DICE_COLORS.find(c => !cols.includes(c)));
+    diceChanged();
+  });
+  $('players').addEventListener('click', e => {
+    const row = e.target.closest('.player-row');
+    if (!row) return;
+    const i = Number(row.dataset.i), cols = D().colors;
+    if (e.target.closest('.remove') && cols.length > 1) { cols.splice(i, 1); diceChanged(); return; }
+    if (e.target.closest('.swatch')) {
+      // próxima cor que ninguém está usando
+      let k = DICE_COLORS.indexOf(cols[i]);
+      for (let n = 0; n < DICE_COLORS.length; n++) { k = (k + 1) % DICE_COLORS.length; if (!cols.includes(DICE_COLORS[k])) break; }
+      cols[i] = DICE_COLORS[k];
+      diceChanged();
+    }
+  });
+  $('dice-go').addEventListener('click', () => { pushedSub = true; go('roll'); });
+  $('roll-back').addEventListener('click', () => goBack('dice'));
+
+  function renderDiceSetup() {
+    const { faces, qty, colors } = D();
+    $('face-chips').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.faces) === faces)));
+    $('qty-val').textContent = plural(qty, 'dado', 'dados');
+    $('qty-dec').disabled = qty <= 1;
+    $('qty-inc').disabled = qty >= MAX_QTY;
+    $('players').innerHTML = colors.map((c, i) => `
+      <div class="player-row" data-i="${i}">
+        <button type="button" class="swatch" style="background:${c}" aria-label="Trocar a cor do Jogador ${i + 1}"></button>
+        <b>Jogador ${i + 1}</b>
+        <span class="mini" aria-hidden="true">${dieSvg(faces, faces === 6 ? 6 : faces, c)}</span>
+        ${colors.length > 1 ? `<button type="button" class="remove" aria-label="Remover Jogador ${i + 1}">×</button>` : ''}
+      </div>`).join('');
+    $('add-player').disabled = colors.length >= MAX_PLAYERS;
+    $('dice-go').textContent = `Ir para a mesa · ${qty}d${faces}`;
+  }
+
+  function dieSize(qty) { return qty <= 3 ? '5rem' : qty <= 6 ? '4.1rem' : '3.4rem'; }
+  function sumHtml(i) {
+    const r = rolls[i];
+    if (!r) return 'Ainda não rolou';
+    return D().qty > 1 ? `Soma <b>${r.reduce((a, b) => a + b, 0)}</b>` : '';
+  }
+  function renderRoll() {
+    const { faces, qty, colors } = D();
+    $('roll-title').textContent = `${qty}d${faces}`;
+    $('roll-sub').textContent = colors.length === 1 ? '1 jogador' : `${colors.length} jogadores`;
+    $('roll-list').innerHTML = colors.map((c, i) => {
+      const vals = rolls[i] || Array(qty).fill(null);
+      return `<section class="roll-card" data-player="${i}" style="--pc:${c};--pc-ink:${readableOn(c)};--ds:${dieSize(qty)}">
+        <div class="roll-card-head">
+          <span class="who">Jogador ${i + 1}</span>
+          <span class="sum" aria-live="polite">${sumHtml(i)}</span>
+          <button type="button" class="roll-btn" data-roll="${i}">Rolada</button>
+        </div>
+        <div class="dice-row">${vals.map(v => `<span class="die">${dieSvg(faces, v, c)}</span>`).join('')}</div>
+      </section>`;
+    }).join('');
+  }
+  $('roll-list').addEventListener('click', e => {
+    const b = e.target.closest('.roll-btn');
+    if (b) rollPlayer(Number(b.dataset.roll), 0);
+  });
+  $('roll-all').addEventListener('click', () => { D().colors.forEach((_, i) => rollPlayer(i, i * 70)); });
+
+  function rollPlayer(i, delay) {
+    if (rolling.has(i)) return;
+    const card = $('roll-list').querySelector(`[data-player="${i}"]`);
+    if (!card) return;
+    const { faces, qty } = D(), color = D().colors[i];
+    const final = Array.from({ length: qty }, () => rand(faces) + 1);
+    const els = [...card.querySelectorAll('.die')];
+    const btn = card.querySelector('.roll-btn'), sumEl = card.querySelector('.sum');
+    rolling.add(i); btn.disabled = true;
+    sumEl.textContent = 'Rolando…';
+    buzz(20);
+    let longest = 0;
+    els.forEach((el, k) => {
+      const dur = reduceMotion ? 0 : 600 + delay + k * 90;
+      longest = Math.max(longest, dur);
+      if (!dur) { el.innerHTML = dieSvg(faces, final[k], color); return; }
+      el.classList.remove('landed'); el.classList.add('rolling');
+      const iv = setInterval(() => { el.innerHTML = dieSvg(faces, rand(faces) + 1, color); }, 80);
+      setTimeout(() => {
+        clearInterval(iv);
+        el.innerHTML = dieSvg(faces, final[k], color);
+        el.classList.remove('rolling'); void el.offsetWidth; el.classList.add('landed');
+      }, dur);
+    });
+    setTimeout(() => {
+      rolls[i] = final;
+      sumEl.innerHTML = sumHtml(i);
+      rolling.delete(i); btn.disabled = false;
+    }, longest + 30);
   }
 
   // ---------- início ----------
@@ -854,6 +1456,7 @@ body[data-touching="true"] .topbar *{pointer-events:none}
     renderSettings();
     resize();
     updateHud();
+    show(SCREEN_BY_HASH[location.hash.slice(1)] || 'draw');
     requestAnimationFrame(frame);
   }
   window.claude?.hot?.snapshot?.(() => ({ settings }));
