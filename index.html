@@ -689,7 +689,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple', timerSecs: 30, alarm: true, dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] } };
+  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -725,7 +725,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (Number.isInteger(src.teams)) settings.teams = clamp(src.teams, ...LIMITS.teams);
     if (TIMES.includes(src.seconds)) settings.seconds = src.seconds;
     if (SCALES.includes(src.scale)) settings.scale = src.scale;
-    if (ICONS.some(i => i.id === src.icon)) settings.icon = src.icon;
+    // a partir da v2 o padrão é o Aleatório; escolhas salvas antes disso não valem
+    if (src.v >= 2 && ICONS.some(i => i.id === src.icon)) settings.icon = src.icon;
     if (Number.isInteger(src.timerSecs) && src.timerSecs >= 1 && src.timerSecs <= 5999) settings.timerSecs = src.timerSecs;
     if (typeof src.alarm === 'boolean') settings.alarm = src.alarm;
     const d = src.dice;
