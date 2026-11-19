@@ -170,6 +170,7 @@ body[data-touching="true"] .topbar *{pointer-events:none}
 .tab[aria-current="page"]{color:var(--ink);background:rgba(240,246,246,.08)}
 .tab[aria-current="page"] svg{color:var(--accent)}
 body[data-screen="clock"] .tabbar,
+body[data-screen="bomb"] .tabbar,
 body[data-screen="roll"] .tabbar{display:none}
 body[data-screen="draw"]:not([data-phase="idle"]) .tabbar,
 body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:none}
@@ -243,6 +244,38 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .clock-hint{margin:0;font-weight:800;font-size:1.05rem;color:var(--muted);text-align:center;padding:0 1rem}
 .clock-bottom{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 22px);display:flex;justify-content:center;z-index:2;padding:0 18px}
 .clock-bottom .primary{min-width:12rem;font-size:1.1rem;min-height:3.2rem}
+
+/* Bomba */
+#timer-mode{display:flex;width:100%}
+#timer-mode button{flex:1;justify-content:center}
+.mode-panel{display:grid;gap:1.5rem}
+#screen-bomb{display:grid;place-items:center;overflow:hidden;touch-action:none;padding:0}
+.bomb-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff6d8 0%,#f5c330 30%,#f08a24 60%,#d11f1d 100%)}
+#screen-bomb.is-boom .bomb-flash{animation:boomflash 1.4s ease-out both}
+@keyframes boomflash{0%{opacity:1}35%{opacity:.85}100%{opacity:0}}
+.bomb-center{position:relative;z-index:1;display:grid;justify-items:center;gap:.7rem;pointer-events:none;padding:0 1rem}
+.bomb-stage{position:relative;width:min(74vw,50vh);aspect-ratio:1}
+.bomb-stage svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.bomb-art{transform-origin:50% 60%}
+.bomb-art.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+#screen-bomb.is-lit .bomb-art{animation:wobble .9s ease-in-out infinite}
+@keyframes wobble{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+.spark{opacity:0;transform-box:fill-box;transform-origin:center}
+#screen-bomb.is-lit .spark{opacity:1;animation:spark .2s steps(2,end) infinite}
+@keyframes spark{0%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.4) rotate(22deg)}100%{transform:scale(.85) rotate(45deg)}}
+.boom-art{opacity:0}
+#screen-bomb.is-boom .boom-art{animation:boom .55s cubic-bezier(.2,1.6,.4,1) both}
+#screen-bomb.is-boom .bomb-art{opacity:0}
+@keyframes boom{0%{transform:scale(.2) rotate(-20deg);opacity:0}100%{transform:scale(1.15) rotate(0deg);opacity:1}}
+#screen-bomb.is-boom .bomb-center{animation:shake .5s linear}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-10px,6px)}40%{transform:translate(9px,-7px)}60%{transform:translate(-7px,-4px)}80%{transform:translate(6px,5px)}}
+.bomb-range{margin:0;font-size:.9rem;font-weight:700;color:var(--muted);text-align:center}
+#screen-bomb.is-boom .clock-hint,#screen-bomb.is-boom .bomb-range{visibility:hidden}
+@media (prefers-reduced-motion: reduce){
+  #screen-bomb.is-lit .bomb-art,#screen-bomb.is-lit .spark,#screen-bomb.is-boom .bomb-center,.bomb-art.pop{animation:none}
+  #screen-bomb.is-boom .boom-art{animation:none;opacity:1}
+}
 
 /* Dados */
 .chips{display:flex;flex-wrap:wrap;gap:.5rem}
@@ -404,8 +437,13 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   <div class="screen-inner">
     <header>
       <h2 class="screen-title" id="timer-title">Ampulheta</h2>
-      <p class="screen-sub">Escolha o tempo do turno. Na tela seguinte, toque em qualquer lugar para começar.</p>
+      <p class="screen-sub" id="timer-sub">Escolha o tempo do turno. Na tela seguinte, toque em qualquer lugar para começar.</p>
     </header>
+    <div class="pill-group seg" id="timer-mode" role="group" aria-label="Tipo de temporizador">
+      <button type="button" data-tmode="hourglass" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12M7.5 3c0 5 4.5 6 4.5 9s-4.5 4-4.5 9M16.5 3c0 5-4.5 6-4.5 9s4.5 4 4.5 9"/></svg>Ampulheta</button>
+      <button type="button" data-tmode="bomb" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="14" r="7"/><path d="M15.5 9l2-2M17.5 7c1-2 2.5-3 4-2.5"/></svg>Bomba</button>
+    </div>
+    <div class="mode-panel" id="hourglass-panel">
     <section>
       <h3 class="label">Tempos prontos</h3>
       <div class="presets" id="presets"></div>
@@ -420,8 +458,21 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       </form>
       <p class="error" id="custom-error" role="alert" hidden></p>
     </section>
+    </div>
+    <div class="mode-panel" id="bomb-panel" hidden>
+      <section>
+        <h3 class="label">Tempo secreto</h3>
+        <form class="custom" id="bomb-form" novalidate>
+          <label class="field" for="bomb-min">Mínimo (s)<input id="bomb-min" type="number" inputmode="numeric" min="1" max="3600" value="15"></label>
+          <span class="colon" aria-hidden="true">–</span>
+          <label class="field" for="bomb-max">Máximo (s)<input id="bomb-max" type="number" inputmode="numeric" min="1" max="3600" value="60"></label>
+          <button class="primary" type="submit">Armar a bomba</button>
+        </form>
+        <p class="error" id="bomb-error" role="alert" hidden></p>
+      </section>
+    </div>
     <div class="toggle-row">
-      <div><b>Alarme ao terminar</b><small>Apita por 3 segundos quando o tempo acaba.</small></div>
+      <div><b>Alarme ao terminar</b><small id="alarm-desc">Apita por 3 segundos quando o tempo acaba.</small></div>
       <button class="switch" id="alarm-switch" type="button" role="switch" aria-checked="true" aria-label="Alarme ao terminar"></button>
     </div>
   </div>
@@ -452,6 +503,22 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   </div>
   <div class="clock-bottom"><button class="primary" id="clock-reset" type="button" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Reiniciar</button></div>
+</section>
+
+<!-- Ampulheta: bomba com tempo secreto -->
+<section class="screen" id="screen-bomb" hidden aria-label="Bomba">
+  <div class="bomb-flash" aria-hidden="true"></div>
+  <div class="clock-top">
+    <button class="ghost-btn" id="bomb-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Tempos</button>
+    <button class="ghost-btn" id="bomb-sound" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="bomb-sound-label">Som ligado</span></button>
+  </div>
+  <div class="bomb-center">
+    <div class="bomb-stage" id="bomb-stage" role="img" aria-label="Bomba"></div>
+    <p class="clock-hint" id="bomb-hint" aria-live="polite">Toque na tela para acender o pavio</p>
+    <p class="bomb-range" id="bomb-range">Tempo secreto entre 15 s e 60 s</p>
+  </div>
+  <div class="clock-bottom"><button class="primary" id="bomb-reset" type="button" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Desarmar</button></div>
 </section>
 
 <!-- Dados: configuração -->
@@ -514,6 +581,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const FACES = [2, 3, 4, 6, 8, 10, 12, 20, 100];
   const DICE_COLORS = ['#e8433a', '#3c83db', '#3fae5a', '#f5c330', '#8e5bd8', '#f08a24', '#e8579a', '#2bb3c0', '#ede6da', '#b98552'];
   const MAX_PLAYERS = 6, MAX_QTY = 10;
+  const BOMB_LIMIT = 3600; // segundos
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MEEPLE_D = document.getElementById('meeple').getAttribute('d');
 
@@ -691,7 +759,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] } };
+  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, timerMode: 'hourglass', bombMin: 15, bombMax: 60, dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -731,6 +799,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (src.v >= 2 && ICONS.some(i => i.id === src.icon)) settings.icon = src.icon;
     if (Number.isInteger(src.timerSecs) && src.timerSecs >= 1 && src.timerSecs <= 5999) settings.timerSecs = src.timerSecs;
     if (typeof src.alarm === 'boolean') settings.alarm = src.alarm;
+    if (src.timerMode === 'hourglass' || src.timerMode === 'bomb') settings.timerMode = src.timerMode;
+    if (Number.isInteger(src.bombMin) && Number.isInteger(src.bombMax) && src.bombMin >= 1 && src.bombMax <= BOMB_LIMIT && src.bombMin <= src.bombMax) {
+      settings.bombMin = src.bombMin; settings.bombMax = src.bombMax;
+    }
     const d = src.dice;
     if (d && typeof d === 'object') {
       if (FACES.includes(d.faces)) settings.dice.faces = d.faces;
@@ -1223,14 +1295,15 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     }
     if (screen === 'draw') draw(now);
     else if (screen === 'clock') clockTick(now);
+    else if (screen === 'bomb') bombTick(now);
     requestAnimationFrame(frame);
   }
 
   // ---------- navegação entre telas ----------
   // Cada tela tem um #nome, então o botão voltar do celular funciona.
-  const HASH_BY_SCREEN = { draw: 'sorteio', timer: 'ampulheta', clock: 'ampulheta-relogio', dice: 'dados', roll: 'dados-mesa' };
+  const HASH_BY_SCREEN = { draw: 'sorteio', timer: 'ampulheta', clock: 'ampulheta-relogio', bomb: 'ampulheta-bomba', dice: 'dados', roll: 'dados-mesa' };
   const SCREEN_BY_HASH = Object.fromEntries(Object.entries(HASH_BY_SCREEN).map(([k, v]) => [v, k]));
-  const PANELS = { timer: $('screen-timer'), clock: $('screen-clock'), dice: $('screen-dice'), roll: $('screen-roll') };
+  const PANELS = { timer: $('screen-timer'), clock: $('screen-clock'), bomb: $('screen-bomb'), dice: $('screen-dice'), roll: $('screen-roll') };
   const tabs = [...document.querySelectorAll('.tab')];
   let screen = 'draw', pushedSub = false;
 
@@ -1247,15 +1320,17 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 
   function show(s) {
     if (screen === 'clock' && s !== 'clock') clockReset();
-    if (s !== 'clock' && s !== 'roll') pushedSub = false;
+    if (screen === 'bomb' && s !== 'bomb') bombReset(false);
+    if (s !== 'clock' && s !== 'bomb' && s !== 'roll') pushedSub = false;
     screen = s;
     body.dataset.screen = s;
     for (const [name, el] of Object.entries(PANELS)) el.hidden = name !== s;
-    const tabFor = s === 'clock' ? 'timer' : s === 'roll' ? 'dice' : s;
+    const tabFor = s === 'clock' || s === 'bomb' ? 'timer' : s === 'roll' ? 'dice' : s;
     tabs.forEach(t => { if (t.dataset.go === tabFor) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
     if (!sheet.hidden) closeSheet();
     if (s === 'timer') renderTimerSetup();
     if (s === 'clock') clockReset();
+    if (s === 'bomb') bombReset(false);
     if (s === 'dice') renderDiceSetup();
     if (s === 'roll') renderRoll();
     if (s !== 'draw' && PANELS[s]) PANELS[s].scrollTop = 0;
@@ -1292,11 +1367,45 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     $('alarm-switch').setAttribute('aria-checked', String(on));
     $('clock-alarm').setAttribute('aria-pressed', String(on));
     $('clock-alarm-label').textContent = on ? 'Alarme ligado' : 'Alarme desligado';
+    $('bomb-sound').setAttribute('aria-pressed', String(on));
+    $('bomb-sound-label').textContent = on ? 'Som ligado' : 'Som desligado';
   }
   $('alarm-switch').addEventListener('click', () => setAlarm(!settings.alarm));
   $('clock-alarm').addEventListener('click', () => { setAlarm(!settings.alarm); if (settings.alarm) unlockAudio(); });
 
+  const TIMER_TEXT = {
+    hourglass: { sub: 'Escolha o tempo do turno. Na tela seguinte, toque em qualquer lugar para começar.', alarm: 'Apita por 3 segundos quando o tempo acaba.' },
+    bomb: { sub: 'O app sorteia um tempo secreto entre o mínimo e o máximo. Ninguém vê a contagem, só a bomba, até ela explodir.', alarm: 'Tic-tac durante a contagem e estrondo na explosão.' }
+  };
+  function setTimerMode(m) {
+    settings.timerMode = m; save();
+    document.querySelectorAll('#timer-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tmode === m)));
+    $('hourglass-panel').hidden = m !== 'hourglass';
+    $('bomb-panel').hidden = m !== 'bomb';
+    $('timer-sub').textContent = TIMER_TEXT[m].sub;
+    $('alarm-desc').textContent = TIMER_TEXT[m].alarm;
+  }
+  document.querySelectorAll('#timer-mode button').forEach(b => b.addEventListener('click', () => setTimerMode(b.dataset.tmode)));
+  $('bomb-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const lo = parseInt($('bomb-min').value || '0', 10), hi = parseInt($('bomb-max').value || '0', 10);
+    const err = $('bomb-error');
+    let msg = '';
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo < 1 || hi < 1) msg = 'Use tempos de pelo menos 1 segundo.';
+    else if (lo > BOMB_LIMIT || hi > BOMB_LIMIT) msg = `O máximo permitido é ${BOMB_LIMIT} segundos (1 hora).`;
+    else if (lo > hi) msg = 'O mínimo precisa ser menor ou igual ao máximo.';
+    if (msg) { err.textContent = msg; err.hidden = false; return; }
+    err.hidden = true;
+    settings.bombMin = lo; settings.bombMax = hi; save();
+    pushedSub = true;
+    go('bomb');
+  });
+
   function renderTimerSetup() {
+    setTimerMode(settings.timerMode);
+    $('bomb-min').value = settings.bombMin;
+    $('bomb-max').value = settings.bombMax;
+    $('bomb-error').hidden = true;
     $('presets').querySelectorAll('.preset').forEach(b => b.classList.toggle('is-last', Number(b.dataset.sec) === settings.timerSecs));
     if (!PRESETS.includes(settings.timerSecs)) {
       $('custom-min').value = Math.floor(settings.timerSecs / 60);
@@ -1398,6 +1507,118 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   clockEl.addEventListener('click', e => { if (e.target.closest('button')) return; if (clock.state === 'ready') clockStart(); });
   $('clock-reset').addEventListener('click', clockReset);
   $('clock-back').addEventListener('click', () => goBack('timer'));
+
+  // ---------- bomba ----------
+  function burstPts(cx, cy, R, r, n, rot = 0) {
+    const p = [];
+    for (let i = 0; i < n * 2; i++) {
+      const a = rot - Math.PI / 2 + i * Math.PI / n, rad = i % 2 ? r : R;
+      p.push((cx + rad * Math.cos(a)).toFixed(1) + ',' + (cy + rad * Math.sin(a)).toFixed(1));
+    }
+    return p.join(' ');
+  }
+  $('bomb-stage').innerHTML = `
+    <svg class="bomb-art" id="bomb-art" viewBox="0 0 200 200" aria-hidden="true">
+      <defs><radialGradient id="bomb-shine" cx="38%" cy="35%" r="70%"><stop offset="0" stop-color="#555b66"/><stop offset=".55" stop-color="#262930"/><stop offset="1" stop-color="#111215"/></radialGradient></defs>
+      <path d="M146 50 Q156 24 178 22" fill="none" stroke="#3a2a17" stroke-width="10" stroke-linecap="round"/>
+      <path d="M146 50 Q156 24 178 22" fill="none" stroke="#d9b27a" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+      <g transform="rotate(40 136 62)"><rect x="118" y="49" width="36" height="26" rx="6" fill="#40454e" stroke="#0c0d0f" stroke-width="5"/></g>
+      <circle cx="96" cy="122" r="66" fill="url(#bomb-shine)" stroke="#0c0d0f" stroke-width="6"/>
+      <path d="M57 100 Q64 79 87 70" fill="none" stroke="#f0f6f6" stroke-opacity=".35" stroke-width="9" stroke-linecap="round"/>
+      <g class="spark">
+        <polygon points="${burstPts(178, 22, 19, 7, 8)}" fill="#f08a24"/>
+        <polygon points="${burstPts(178, 22, 12, 5, 8, .4)}" fill="#f5c330"/>
+        <circle cx="178" cy="22" r="4.5" fill="#fffbe8"/>
+      </g>
+    </svg>
+    <svg class="boom-art" viewBox="0 0 200 200" aria-hidden="true">
+      <polygon points="${burstPts(100, 100, 98, 60, 13)}" fill="#f08a24" stroke="#14100a" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="${burstPts(100, 100, 72, 46, 13, .25)}" fill="#f5c330"/>
+      <text x="100" y="106" text-anchor="middle" dominant-baseline="middle" font-family="'Lilita One','Arial Rounded MT Bold',sans-serif" font-size="50" fill="#d11f1d" stroke="#14100a" stroke-width="3" paint-order="stroke">BUM!</text>
+    </svg>`;
+
+  function playTick(high) {
+    try {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime + .005;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(high ? 1500 : 1100, t);
+      g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.0001, t + .04);
+      o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + .05);
+    } catch (e) {}
+  }
+  function playBoom() {
+    try {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime + .01, sr = audioCtx.sampleRate, len = Math.floor(sr * 1.7);
+      const buf = audioCtx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
+      const src = audioCtx.createBufferSource(); src.buffer = buf;
+      const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(110, t + 1.5);
+      const g = audioCtx.createGain(); g.gain.setValueAtTime(.95, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.7);
+      src.connect(lp).connect(g).connect(audioCtx.destination); src.start(t);
+      const o = audioCtx.createOscillator(), og = audioCtx.createGain(); // pancada grave
+      o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(28, t + .7);
+      og.gain.setValueAtTime(.9, t); og.gain.exponentialRampToValueAtTime(.001, t + .9);
+      o.connect(og).connect(audioCtx.destination); o.start(t); o.stop(t + .95);
+    } catch (e) {}
+  }
+
+  const bomb = { state: 'ready', end: 0, nextTick: 0, tickHigh: true, boomUntil: 0 };
+  const bombEl = $('screen-bomb');
+  function bombRangeText() { return `Tempo secreto entre ${settings.bombMin} s e ${settings.bombMax} s`; }
+  function bombReset(pop) {
+    bomb.state = 'ready';
+    bombEl.classList.remove('is-lit', 'is-boom');
+    const art = $('bomb-art');
+    art.classList.remove('pop');
+    if (pop && !reduceMotion) { void art.getBoundingClientRect(); art.classList.add('pop'); }
+    $('bomb-hint').textContent = 'Toque na tela para acender o pavio';
+    $('bomb-range').textContent = bombRangeText();
+    $('bomb-reset').hidden = true;
+    setAlarm(settings.alarm);
+  }
+  function bombStart() {
+    if (bomb.state !== 'ready') return;
+    unlockAudio();
+    const lo = settings.bombMin * 1000, hi = settings.bombMax * 1000;
+    const now = performance.now();
+    bomb.end = now + lo + rand(hi - lo + 1); // sorteado a cada rodada, nunca mostrado
+    bomb.nextTick = now; bomb.tickHigh = true;
+    bomb.state = 'lit';
+    $('bomb-art').classList.remove('pop');
+    bombEl.classList.add('is-lit');
+    $('bomb-hint').textContent = 'Pavio aceso!';
+    $('bomb-reset').hidden = false;
+    keepAwake();
+    buzz(15);
+  }
+  function bombTick(now) {
+    if (bomb.state === 'lit') {
+      if (now >= bomb.end) {
+        bomb.state = 'boom';
+        bomb.boomUntil = now + 2400;
+        bombEl.classList.remove('is-lit');
+        bombEl.classList.add('is-boom');
+        $('bomb-reset').hidden = true;
+        if (settings.alarm) playBoom();
+        buzz([450, 80, 250]);
+        return;
+      }
+      if (now >= bomb.nextTick) {
+        if (settings.alarm) playTick(bomb.tickHigh);
+        bomb.tickHigh = !bomb.tickHigh;
+        bomb.nextTick = Math.max(bomb.nextTick + 500, now + 250);
+      }
+    } else if (bomb.state === 'boom' && now >= bomb.boomUntil) {
+      bombReset(true); // bomba nova, pronta para outra rodada
+    }
+  }
+  bombEl.addEventListener('click', e => { if (e.target.closest('button')) return; if (bomb.state === 'ready') bombStart(); });
+  $('bomb-reset').addEventListener('click', () => bombReset(true));
+  $('bomb-back').addEventListener('click', () => goBack('timer'));
+  $('bomb-sound').addEventListener('click', () => { setAlarm(!settings.alarm); if (settings.alarm) unlockAudio(); });
 
   // ---------- dados ----------
   // Uma "pele" por tipo de dado: moeda (d2), triângulos (d3/d4), cubo com pintas (d6),
