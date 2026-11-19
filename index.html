@@ -388,7 +388,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="icon-grid" id="icon-grid" hidden></div>
-      <p class="note">O mesmo ícone marca os times, na cor de cada time.</p>
+      <p class="note" id="icon-note">O mesmo ícone marca os times, na cor de cada time.</p>
     </section>
     <section id="fs-section" hidden>
       <button class="wide-btn" id="fullscreen" type="button">
@@ -610,6 +610,61 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       <circle cx="50" cy="25" r="14" fill="${F}" stroke="${O}" ${S}/>
       <rect x="19" y="78" width="62" height="13" rx="4" fill="${F}" stroke="${O}" ${S}/>` }
   ];
+  ICONS.push(
+    { id: 'gato', name: 'Gato', svg: (F, O) => `
+      <path d="M17 32 L21 7 L41 23 Q50 21 59 23 L79 7 L83 32 Q90 43 88 57 Q85 85 50 89 Q15 85 12 57 Q10 43 17 32 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M25 17 L35 26 L25 30 Z" fill="${lighten(F, .4)}"/><path d="M75 17 L65 26 L75 30 Z" fill="${lighten(F, .4)}"/>
+      <ellipse cx="36" cy="51" rx="5.5" ry="8" fill="${O}"/><ellipse cx="64" cy="51" rx="5.5" ry="8" fill="${O}"/>
+      <path d="M44 63 H56 L50 70 Z" fill="${O}"/>
+      <path d="M50 70 Q46 77 39 74 M50 70 Q54 77 61 74" fill="none" stroke="${O}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M30 64 L10 60 M30 69 L11 72 M70 64 L90 60 M70 69 L89 72" stroke="${O}" stroke-width="2.5" stroke-linecap="round"/>` },
+    { id: 'cachorro', name: 'Cachorro', svg: (F, O) => `
+      <path d="M27 36 Q26 13 50 13 Q74 13 73 36 L76 62 Q76 89 50 90 Q24 89 24 62 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M30 20 Q11 17 8 40 Q7 59 19 64 Q28 57 30 42 Z" fill="${darken(F, .28)}" stroke="${O}" ${S}/>
+      <path d="M70 20 Q89 17 92 40 Q93 59 81 64 Q72 57 70 42 Z" fill="${darken(F, .28)}" stroke="${O}" ${S}/>
+      <ellipse cx="50" cy="69" rx="17" ry="13" fill="${lighten(F, .45)}" stroke="${O}" stroke-width="3"/>
+      <ellipse cx="50" cy="61" rx="7.5" ry="5.5" fill="${O}"/>
+      <path d="M50 66 V72 M50 72 Q44 78 39 73 M50 72 Q56 78 61 73" fill="none" stroke="${O}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="38" cy="44" r="5" fill="${O}"/><circle cx="62" cy="44" r="5" fill="${O}"/>` },
+    { id: 'pato', name: 'Pato', svg: (F, O) => `
+      <path d="M8 46 Q16 56 28 56 Q42 52 52 56 Q66 60 80 56 Q93 60 91 72 Q87 89 58 89 H36 Q11 88 9 66 Q8 56 8 46 Z" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="62" cy="33" r="19" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M30 68 Q46 58 60 67 Q50 79 33 75 Z" fill="${darken(F, .18)}" stroke="${O}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M78 30 Q95 28 98 36 Q92 45 77 41 Z" fill="#f7a21b" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <circle cx="66" cy="28" r="4.2" fill="${O}"/>` },
+    { id: 'galinha', name: 'Galinha', svg: (F, O) => `
+      <path d="M36 30 Q33 15 44 18 Q46 7 55 13 Q63 7 65 20 Q74 20 66 32 Z" fill="#e8433a" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M18 56 Q6 64 12 79 Q22 78 26 67 Z" fill="${darken(F, .15)}" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M82 56 Q94 64 88 79 Q78 78 74 67 Z" fill="${darken(F, .15)}" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="60" rx="32" ry="30" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="40" cy="50" r="4.5" fill="${O}"/><circle cx="60" cy="50" r="4.5" fill="${O}"/>
+      <path d="M43 57 H57 L50 67 Z" fill="#f7a21b" stroke="${O}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M50 67 Q44 75 50 80 Q56 75 50 67 Z" fill="#e8433a" stroke="${O}" stroke-width="3" stroke-linejoin="round"/>` },
+    { id: 'mao-l', name: 'Mão em L', svg: (F, O) => `
+      <path d="M28 14 Q28 6 36 6 Q44 6 44 14 V42 H78 Q88 42 88 50 Q88 58 78 58 H64 Q70 62 66 68 Q70 73 64 78 Q66 85 57 87 Q55 94 45 94 H35 Q22 94 22 81 V50 Q22 44 28 43 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M42 67 H63 M42 77 H61 M44 86 H56" fill="none" stroke="${O}" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+      <path d="M31 14 Q36 10 41 14" fill="none" stroke="${O}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>` },
+    { id: 'medalha', name: 'Medalha', svg: (F, O) => `
+      <path d="M28 4 H45 L57 40 H40 Z" fill="#3c83db" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M72 4 H55 L43 40 H60 Z" fill="#e8433a" stroke="${O}" stroke-width="4" stroke-linejoin="round"/>
+      <circle cx="50" cy="64" r="29" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="50" cy="64" r="20" fill="none" stroke="${O}" stroke-width="2.5" opacity=".5"/>
+      <polygon points="${starPts(50, 64, 13, 5.5)}" fill="${O}"/>` },
+    { id: 'derrota', name: 'Derrota', svg: (F, O) => `
+      <path d="M50 7 Q87 7 87 44 Q87 61 75 67 V79 Q75 88 66 88 H34 Q25 88 25 79 V67 Q13 61 13 44 Q13 7 50 7 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M27 45 Q29 34 40 36 Q47 40 45 50 Q41 59 32 55 Q25 51 27 45 Z" fill="${O}"/>
+      <path d="M73 45 Q71 34 60 36 Q53 40 55 50 Q59 59 68 55 Q75 51 73 45 Z" fill="${O}"/>
+      <path d="M50 57 L44 68 H56 Z" fill="${O}"/>
+      <path d="M38 75 V88 M46 75 V88 M54 75 V88 M62 75 V88" stroke="${O}" stroke-width="3"/>` },
+    // não é um desenho: cada dedo recebe um símbolo diferente sorteado da lista acima
+    { id: 'aleatorio', name: 'Aleatório', random: true, svg: (F, O) => `
+      <rect x="10" y="10" width="80" height="80" rx="20" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M36 38 Q36 22 51 22 Q66 22 66 36 Q66 46 56 51 Q50 54 50 62" fill="none" stroke="${O}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="50" cy="77" r="6.5" fill="${O}"/>
+      <polygon points="${starPts(84, 14, 9, 3.6)}" fill="${lighten(F, .5)}" stroke="${O}" stroke-width="2.5" stroke-linejoin="round"/>` }
+  );
+  const RANDOM_POOL = ICONS.filter(i => !i.random).map(i => i.id);
+  const isRandom = () => settings.icon === 'aleatorio';
   const iconById = id => ICONS.find(i => i.id === id) || ICONS[0];
   const iconSvg = (id, F, O = DARK) => `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="-4 -4 108 108">${iconById(id).svg(F, O)}</svg>`;
   const imgCache = new Map();
@@ -645,6 +700,14 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {}
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && fingers.size) keepAwake(); });
+
+  // modo Aleatório: um símbolo diferente para cada dedo na mesa
+  function pickIcon() {
+    const used = new Set([...fingers.values()].map(f => f.icon));
+    const free = RANDOM_POOL.filter(id => !used.has(id));
+    const pool = free.length ? free : RANDOM_POOL;
+    return pool[rand(pool.length)];
+  }
 
   function pickColor() {
     const used = new Map(PALETTE.map(c => [c, 0]));
@@ -707,6 +770,9 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     hintSubEl.textContent = `A contagem de ${settings.seconds} segundos começa quando houver ${min} dedos na tela. Quem chegar depois ainda entra; se ficar menos de ${min}, ela para.`;
     $('icon-preview').innerHTML = iconSvg(settings.icon, BRAND);
     $('icon-name').textContent = iconById(settings.icon).name;
+    $('icon-note').textContent = isRandom()
+      ? 'Cada dedo ganha um símbolo diferente assim que toca a mesa. No fim, todos ficam e o vencedor ganha destaque.'
+      : 'O mesmo ícone marca os times, na cor de cada time.';
     grid.querySelectorAll('.icon-opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.icon === settings.icon)));
     vignette = null;
   }
@@ -762,7 +828,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const now = performance.now();
     if (phase === 'result') return; // rodada em andamento: espera todo mundo tirar o dedo
     if (result) { oldResult = { res: result, at: now }; result = null; setStatusInk(INK); } // nova rodada apaga a anterior
-    fingers.set(e.pointerId, { id: e.pointerId, x: e.clientX, y: e.clientY, color: pickColor(), born: now, wob: Math.random() * TAU });
+    fingers.set(e.pointerId, { id: e.pointerId, x: e.clientX, y: e.clientY, color: pickColor(), born: now, wob: Math.random() * TAU, icon: isRandom() ? pickIcon() : null });
     buzz(12);
     keepAwake();
     onFingersChanged(now);
@@ -810,18 +876,19 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 
   function resolve(now) {
     const list = shuffle([...fingers.values()]);
-    const marks = list.map((f, i) => ({ id: f.id, x: f.x, y: f.y, born: f.born, wob: f.wob, color: f.color, order: i, liftedAt: 0, winner: false, team: null }));
+    const marks = list.map((f, i) => ({ id: f.id, x: f.x, y: f.y, born: f.born, wob: f.wob, color: f.color, icon: f.icon, order: i, liftedAt: 0, winner: false, team: null }));
+    const random = marks.some(m => m.icon);
     if (settings.mode === 'winner') {
       const k = Math.min(settings.winners, marks.length - 1);
       marks.slice(0, k).forEach((m, i) => { m.winner = true; m.rank = i; });
-      result = { mode: 'winner', at: now, marks, count: k };
+      result = { mode: 'winner', at: now, marks, count: k, random };
       if (k === 1) setStatusInk(readableOn(marks[0].color));
     } else {
       const t = settings.teams;
       // rodízio com a ordem dos times sorteada: quem fica com um jogador a mais também é aleatório
       const teamOrder = shuffle([...Array(t).keys()]);
       marks.forEach((m, i) => { m.team = teamOrder[i % t]; });
-      result = { mode: 'teams', at: now, marks, count: t };
+      result = { mode: 'teams', at: now, marks, count: t, random };
     }
     phase = 'result';
     buzz([70, 50, 140]);
@@ -948,17 +1015,21 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     ctx.restore();
   }
 
-  // ficha redonda com o ícone escolhido
-  function drawBadge(x, y, R, color, alpha) {
+  // ficha redonda com um ícone (o escolhido nas configurações ou o sorteado para o dedo)
+  function drawBadge(x, y, R, color, alpha, icon, halo) {
     if (R <= 1 || alpha <= 0.01) return;
     ctx.save();
     ctx.globalAlpha = alpha;
+    if (halo) {
+      ctx.lineWidth = Math.max(3, R * .09); ctx.strokeStyle = halo;
+      ctx.beginPath(); ctx.arc(x, y, R * 1.22, 0, TAU); ctx.stroke();
+    }
     ctx.fillStyle = 'rgba(0,0,0,.35)';
     ctx.beginPath(); ctx.arc(x + 2, y + 4, R, 0, TAU); ctx.fill();
     ctx.fillStyle = readableOn(color) === DARK ? '#2a2d33' : CREAM;
     ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
     ctx.lineWidth = Math.max(4, R * .13); ctx.strokeStyle = color; ctx.stroke();
-    const s = R * 1.42, im = iconImg(settings.icon, color);
+    const s = R * 1.42, im = iconImg(icon || settings.icon, color);
     if (im.complete && im.naturalWidth) ctx.drawImage(im, x - s / 2, y - s / 2, s, s);
     ctx.restore();
   }
@@ -970,28 +1041,39 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
   }
 
-  function drawPill(x, y, team, alpha, scale) {
+  function drawLabel(x, y, text, bg, fg, alpha, scale) {
     if (alpha <= 0.01) return;
     const sc = settings.scale;
     ctx.save();
     ctx.font = `800 ${Math.round(14 * sc)}px "Nunito Sans", system-ui, sans-serif`;
     ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-    const label = team.name.toUpperCase();
-    const ph = 30 * sc, pw = ctx.measureText(label).width + 22 * sc;
+    const ph = 30 * sc, pw = ctx.measureText(text).width + 22 * sc;
     ctx.globalAlpha = alpha;
     ctx.translate(x, y); ctx.scale(scale, scale);
     roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2);
-    ctx.fillStyle = team.color; ctx.fill();
-    ctx.fillStyle = DARK;
-    ctx.fillText(label, -pw / 2 + 11 * sc, 1);
+    ctx.fillStyle = bg; ctx.fill();
+    ctx.fillStyle = fg;
+    ctx.fillText(text, -pw / 2 + 11 * sc, 1);
     ctx.restore();
+  }
+  const drawPill = (x, y, team, alpha, scale) => drawLabel(x, y, team.name.toUpperCase(), team.color, DARK, alpha, scale);
+  const drawWinnerTag = (x, y, alpha) => drawLabel(x, y, 'VENCEDOR', BRAND, '#ffffff', alpha, 1);
+
+  // modo Aleatório: a ficha do dedo fica logo acima dele
+  const fingerBadgeY = (m, R) => aboveY(m, baseRadius() * 1.05, R + 10);
+  function drawFingerBadge(f, now, R) {
+    const appear = clamp((now - f.born - 120) / 520);
+    if (appear <= 0) return;
+    const drop = (1 - easeOutBack(appear)) * -50; // o símbolo "cai" no dedo
+    drawBadge(f.x, fingerBadgeY(f, R) + drop, R, f.color, clamp(appear * 3), f.icon);
   }
 
   function drawWinnerResult(res, now, fade, r0) {
     const t = now - res.at, e = easeInOutCubic(clamp(t / 750));
     const winners = res.marks.filter(m => m.winner);
     const single = winners.length === 1;
-    const R = badgeRadius(r0);
+    const R = badgeRadius(r0), sc = settings.scale;
+    const Rw = res.random ? R * 1.25 : R;
 
     // brilho: a cor do vencedor inunda a mesa e depois some
     if (single) {
@@ -1010,11 +1092,23 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 
     for (const m of res.marks) if (!m.winner && t < 800) drawToken(m, m.color, now, r0, fade * (1 - e), 0, 1 - .6 * e);
 
+    // Aleatório: os símbolos de quem não ganhou continuam na mesa, menores e apagados
+    if (res.random) {
+      for (const m of res.marks) {
+        if (m.winner) continue;
+        const from = fingerBadgeY(m, R);
+        const g = m.liftedAt ? easeOutCubic(clamp((now - m.liftedAt) / 450)) : 0;
+        drawBadge(m.x, from + (m.y - from) * g, R * (1 - .2 * e), m.color, fade * (1 - .55 * e), m.icon);
+      }
+    }
+
     winners.forEach((w, i) => {
-      const appear = clamp((t - 350 - i * 200) / 650);
-      const grow = 1 + .3 * easeOutBack(clamp(t / 750));
+      const appear = res.random ? 1 : clamp((t - 350 - i * 200) / 650);
+      const pop = easeOutBack(clamp(t / 750));
+      const grow = 1 + .3 * pop;
       const r = r0 * grow;
-      const fromY = aboveY(w, r0 * 1.3, R + 12);
+      const fromY = aboveY(w, r0 * 1.3, Rw + 12);
+      const halo = res.random ? INK : null;
       if (!w.liftedAt) {
         const flooding = single && t < 1900;
         if (flooding) {
@@ -1029,17 +1123,28 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
           drawWaves(w.x, w.y, r, w.color, fade * e, t);
           drawToken(w, w.color, now, r0, fade, 0, grow);
         }
-        if (appear > 0) {
+        if (res.random) {
+          // a ficha que já estava no dedo cresce e sobe um pouco
+          const from = fingerBadgeY(w, R);
+          const y = from + (fromY - from) * e, rr = R + (Rw - R) * pop;
+          drawBadge(w.x, y, rr, w.color, fade, w.icon, halo);
+          const ty = y - rr * 1.22 - 20 * sc;
+          drawWinnerTag(w.x, ty > 24 ? ty : y + rr * 1.22 + 20 * sc, fade * e);
+        } else if (appear > 0) {
           const drop = (1 - easeOutBack(appear)) * -60;
-          drawBadge(w.x, fromY + drop, R, w.color, fade * clamp(appear * 3));
+          drawBadge(w.x, fromY + drop, R, w.color, fade * clamp(appear * 3), w.icon);
         }
       } else {
         // dedo saiu: a ficha desce e fica no lugar do campeão
         const g = easeOutCubic(clamp((now - w.liftedAt) / 450));
         const y = fromY + (w.y - fromY) * g;
-        drawGlow(w.x, w.y, R, w.color, fade * g);
-        drawWaves(w.x, w.y, R * 1.1, w.color, fade * g * .8, t);
-        drawBadge(w.x, y, R, w.color, fade * Math.max(clamp(appear * 3), g));
+        drawGlow(w.x, w.y, Rw, w.color, fade * g);
+        drawWaves(w.x, w.y, Rw * 1.1, w.color, fade * g * .8, t);
+        drawBadge(w.x, y, Rw, w.color, fade * Math.max(clamp(appear * 3), g), w.icon, halo);
+        if (res.random) {
+          const by = y + Rw * 1.22 + 20 * sc;
+          drawWinnerTag(w.x, by < H - 16 ? by : y - Rw * 1.22 - 20 * sc, fade);
+        }
       }
     });
   }
@@ -1053,15 +1158,21 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     for (const m of res.marks) {
       const team = TEAMS[m.team];
       const k = clamp((t - m.order * 160) / 420), kt = easeOutCubic(k);
+      const color = k <= 0 ? m.color : mix(m.color, team.color, kt);
       if (!m.liftedAt) {
-        const color = k <= 0 ? m.color : mix(m.color, team.color, kt);
         const r = drawToken(m, color, now, r0, fade, 0, 1 + .28 * Math.sin(Math.PI * k)) || r0;
-        if (k > 0) pills.push([m.x, aboveY(m, r, 30 * sc), team, fade * kt, .8 + .2 * kt]);
+        if (res.random) drawBadge(m.x, fingerBadgeY(m, R), R, color, fade, m.icon);
+        else if (k > 0) pills.push([m.x, aboveY(m, r, 30 * sc), team, fade * kt, .8 + .2 * kt]);
       } else {
         // dedo saiu: fica uma ficha com o ícone na cor do time
         const g = clamp((now - m.liftedAt) / 380);
         drawGlow(m.x, m.y, R, team.color, fade * g * .8);
-        drawBadge(m.x, m.y, R * Math.max(.05, easeOutBack(g)), team.color, fade);
+        if (res.random) {
+          const from = fingerBadgeY(m, R), gg = easeOutCubic(g);
+          drawBadge(m.x, from + (m.y - from) * gg, R, team.color, fade, m.icon);
+        } else {
+          drawBadge(m.x, m.y, R * Math.max(.05, easeOutBack(g)), team.color, fade, m.icon);
+        }
         const below = m.y + R + 26 * sc < H - 12 ? m.y + R + 26 * sc : m.y - R - 26 * sc;
         pills.push([m.x, below, team, fade * Math.max(kt, g), 1]);
       }
@@ -1092,6 +1203,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (phase !== 'result') {
       const p = phase === 'counting' ? clamp((now - countStart) / countMs) : 0;
       for (const f of fingers.values()) drawToken(f, f.color, now, r0, 1, p, 1);
+      const R = badgeRadius(r0);
+      for (const f of fingers.values()) if (f.icon) drawFingerBadge(f, now, R);
     }
   }
 
