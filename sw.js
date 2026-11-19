@@ -1,5 +1,5 @@
 // Sorteador TF: guarda o app no celular para funcionar sem internet.
-const CACHE = 'sorteador-tf-v4';
+const CACHE = 'sorteador-tf-v5';
 const APP_FILES = [
   './',
   './index.html',
@@ -7,7 +7,8 @@ const APP_FILES = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png'
+  './icons/apple-touch-icon.png',
+  './icons/logo.png'
 ];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
