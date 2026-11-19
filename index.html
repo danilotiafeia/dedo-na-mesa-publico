@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#11281f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sorteador TF">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Sorteador TF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* Mesa de feltro verde-escuro; cada dedo vira um peão de madeira colorido. Uma tela só, sem rolagem. */
+:root{
+  --felt:#11281f;
+  --panel:#163428;
+  --ink:#f3ecdd;
+  --muted:rgba(243,236,221,.68);
+  --accent:#f5c330;
+  --line:rgba(243,236,221,.18);
+  --status-ink:var(--ink);
+  --font-display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{font-size:16px}
+body{
+  background:var(--felt);color:var(--ink);font-family:var(--font-body);
+  overflow:hidden;overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+}
+#table{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+.hud{
+  position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+  padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 16px);
+}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:2.75rem;transition:opacity .25s}
+.brand{font-family:var(--font-display);font-size:1.375rem;letter-spacing:.02em;display:flex;align-items:center;gap:.5rem}
+.brand svg{width:1.375rem;height:1.375rem}
+.icon-btn{
+  pointer-events:auto;width:2.75rem;height:2.75rem;border-radius:.875rem;border:1px solid var(--line);
+  background:rgba(0,0,0,.22);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0
+}
+.icon-btn svg{width:1.3rem;height:1.3rem}
+
+.status{
+  position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top) + 4.4rem);text-align:center;
+  color:var(--status-ink);opacity:0;transition:opacity .2s;pointer-events:none;padding:0 16px
+}
+body[data-phase="counting"] .status,
+body[data-phase="result"] .status{top:calc(env(safe-area-inset-top) + 1.1rem)}
+.status.on{opacity:1}
+.status-big{font-family:var(--font-display);font-size:2.125rem;line-height:1.05;text-wrap:balance}
+.status-big.is-number{font-size:4.75rem;line-height:1;font-variant-numeric:tabular-nums}
+.status-sub{font-weight:700;font-size:.95rem;margin-top:.4rem;opacity:.92;text-wrap:balance;line-height:1.5}
+.status-sub b{font-weight:800;white-space:nowrap}
+.status-note{font-size:.875rem;font-weight:700;margin-top:.2rem;opacity:.72;text-wrap:balance}
+.status-note:empty{display:none}
+.dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;vertical-align:-.05em;margin-right:.3em}
+
+.hint{
+  position:fixed;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:.9rem;
+  padding:0 1.75rem 9rem;pointer-events:none;transition:opacity .25s;opacity:0
+}
+body[data-phase="idle"][data-touching="false"][data-showing="false"] .hint{opacity:1}
+.hint-rings{position:relative;width:150px;height:96px;margin-bottom:6px}
+.hint-rings span{
+  position:absolute;width:62px;height:62px;border-radius:50%;border:6px solid var(--c);
+  background:color-mix(in srgb,var(--c) 26%,transparent);animation:breathe 2.4s ease-in-out infinite
+}
+.hint-rings span:nth-child(1){--c:#e8433a;left:0;top:26px}
+.hint-rings span:nth-child(2){--c:#f5c330;left:44px;top:0;animation-delay:-.8s}
+.hint-rings span:nth-child(3){--c:#3c83db;left:88px;top:30px;animation-delay:-1.6s}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.hint-title{font-family:var(--font-display);font-weight:400;font-size:1.875rem;line-height:1.1;margin:0;max-width:16ch;text-wrap:balance}
+.hint-sub{margin:0;font-size:1rem;line-height:1.45;color:var(--muted);max-width:32ch;text-wrap:balance}
+
+.controls{display:grid;justify-items:center;gap:.6rem;transition:opacity .25s}
+.pill-group{pointer-events:auto;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:rgba(0,0,0,.32);border:1px solid var(--line)}
+.seg button{
+  font:inherit;font-weight:800;font-size:.95rem;color:var(--muted);background:transparent;border:0;border-radius:999px;
+  min-height:2.75rem;padding:0 1.25rem;display:flex;align-items:center;gap:.5rem;cursor:pointer
+}
+.seg button svg{width:1rem;height:1rem;flex:none}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#1d1606}
+.steppers{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.stepper button{
+  width:2.25rem;height:2.25rem;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(243,236,221,.1);color:var(--ink);font:inherit;font-size:1.375rem;font-weight:800;line-height:1;
+  display:grid;place-items:center
+}
+.stepper button:disabled{opacity:.28;cursor:default}
+.stepper output{
+  display:flex;align-items:center;justify-content:center;gap:.4rem;min-width:3.5rem;padding:0 4px;
+  font-weight:800;font-size:.95rem;white-space:nowrap;font-variant-numeric:tabular-nums
+}
+.stepper output svg{width:.95rem;height:.95rem;opacity:.7;flex:none}
+#count-val{min-width:6rem}
+.caption{margin:0;font-size:.875rem;color:var(--muted);text-align:center;max-width:34ch;text-wrap:balance}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+body:not([data-phase="idle"]) .topbar,
+body[data-touching="true"] .topbar,
+body:not([data-phase="idle"]) .controls,
+body[data-showing="true"] .controls{opacity:0}
+body:not([data-phase="idle"]) .controls *,
+body[data-showing="true"] .controls *,
+body:not([data-phase="idle"]) .topbar *,
+body[data-touching="true"] .topbar *{pointer-events:none}
+
+/* Configurações */
+.sheet-backdrop{position:fixed;inset:0;z-index:10;background:rgba(3,8,6,.62);display:flex;align-items:flex-end;justify-content:center}
+.sheet-backdrop[hidden]{display:none}
+.sheet{
+  width:100%;max-width:32rem;max-height:88%;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;
+  background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:1.25rem 1.25rem 0 0;
+  padding:1rem 1.25rem calc(env(safe-area-inset-bottom) + 1.25rem);display:grid;gap:1.4rem;
+  box-shadow:0 -12px 40px rgba(0,0,0,.45)
+}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.sheet h2{font-family:var(--font-display);font-weight:400;font-size:1.5rem;margin:0}
+.sheet h3{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 .6rem}
+.text-btn{font:inherit;font-weight:800;font-size:1rem;background:var(--accent);color:#1d1606;border:0;border-radius:999px;padding:.55rem 1.15rem;cursor:pointer}
+.sheet .seg{display:flex;width:100%}
+.sheet .seg button{flex:1;justify-content:center;padding:0 .5rem;font-family:var(--font-display);font-weight:400}
+#font-seg button:nth-child(1){font-size:.85rem}
+#font-seg button:nth-child(2){font-size:1rem}
+#font-seg button:nth-child(3){font-size:1.2rem}
+#font-seg button:nth-child(4){font-size:1.4rem}
+.icon-current{
+  width:100%;display:flex;align-items:center;gap:.9rem;padding:.6rem .8rem;border-radius:1rem;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:var(--ink);font:inherit;text-align:left;cursor:pointer
+}
+.icon-preview{width:3.25rem;height:3.25rem;flex:none;border-radius:50%;background:rgba(243,236,221,.08);display:grid;place-items:center}
+.icon-preview svg{width:2.6rem;height:2.6rem}
+.icon-current b{display:block;font-size:1.05rem}
+.icon-current small{display:block;color:var(--muted);font-size:.85rem;margin-top:.1rem}
+.chev{margin-left:auto;width:1.2rem;height:1.2rem;flex:none;transition:transform .2s}
+.icon-current[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:.75rem}
+.icon-grid[hidden]{display:none}
+.icon-opt{
+  display:grid;justify-items:center;gap:.3rem;padding:.6rem .2rem .5rem;border-radius:.9rem;border:1px solid var(--line);
+  background:rgba(0,0,0,.2);color:var(--ink);font:inherit;font-size:.78rem;font-weight:700;cursor:pointer
+}
+.icon-opt[aria-pressed="true"]{border-color:var(--accent);background:rgba(245,195,48,.14);box-shadow:inset 0 0 0 1px var(--accent)}
+.icon-art{width:2.75rem;height:2.75rem;display:block}
+.icon-art svg{width:100%;height:100%;display:block}
+.note{margin:.6rem 0 0;font-size:.85rem;color:var(--muted)}
+.wide-btn{
+  width:100%;font:inherit;font-weight:800;font-size:.95rem;padding:.8rem;border-radius:.9rem;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:var(--ink);display:flex;gap:.5rem;align-items:center;justify-content:center;cursor:pointer
+}
+.wide-btn svg{width:1.1rem;height:1.1rem}
+[hidden]{display:none !important}
+
+@media (prefers-reduced-motion: reduce){
+  .hint-rings span{animation:none}
+}
+</style>
+</head>
+<body data-phase="idle" data-touching="false" data-showing="false">
+<canvas id="table" aria-label="Mesa: coloque os dedos aqui"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="meeple" d="M50 6c-9.5 0-16 7-16 15.5 0 5 2 9.2 5.4 12.2C28.6 35.6 14 39.5 8 45.4c-4.4 4.4-2.4 10.6 3.8 11.6 7 1.1 15.6-.6 20 .4-4.2 8.5-11.6 21.8-15.6 29.8-2.4 4.8.6 8.8 5.8 8.8h17.6c3 0 5-1.6 6.2-4L50 82l4.2 10c1.2 2.4 3.2 4 6.2 4H78c5.2 0 8.2-4 5.8-8.8-4-8-11.4-21.3-15.6-29.8 4.4-1 13 .7 20-.4 6.2-1 8.2-7.2 3.8-11.6C86 39.5 71.4 35.6 60.6 33.7 64 30.7 66 26.5 66 21.5 66 13 59.5 6 50 6z"/>
+  </defs>
+</svg>
+
+<div class="hint">
+  <div class="hint-rings" aria-hidden="true"><span></span><span></span><span></span></div>
+  <h1 class="hint-title">Todo mundo põe um dedo na tela</h1>
+  <p class="hint-sub" id="hint-sub"></p>
+</div>
+
+<div class="status" id="status" aria-live="polite">
+  <div class="status-big" id="status-big"></div>
+  <div class="status-sub" id="status-sub"></div>
+  <div class="status-note" id="status-note"></div>
+</div>
+
+<div class="hud">
+  <div class="topbar">
+    <div class="brand"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#meeple" fill="#f5c330"/></svg>Sorteador TF</div>
+    <button class="icon-btn" id="open-settings" type="button" aria-label="Configurações" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.5"/><circle cx="9.5" cy="17" r="2.5"/></svg>
+    </button>
+  </div>
+  <div class="controls">
+    <div class="pill-group seg" role="group" aria-label="Modo do sorteio">
+      <button id="mode-winner" type="button" data-mode="winner" aria-pressed="true">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#meeple" fill="currentColor"/></svg>Vencedor
+      </button>
+      <button id="mode-teams" type="button" data-mode="teams" aria-pressed="false">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#meeple" fill="#3c83db"/></svg><svg viewBox="0 0 100 100" aria-hidden="true" style="margin-left:-10px"><use href="#meeple" fill="#f08a24"/></svg>Times
+      </button>
+    </div>
+    <div class="steppers">
+      <div class="pill-group stepper" role="group" aria-label="Quantidade">
+        <button id="count-dec" type="button" aria-label="Diminuir quantidade">−</button>
+        <output id="count-val" aria-live="polite">1 vencedor</output>
+        <button id="count-inc" type="button" aria-label="Aumentar quantidade">+</button>
+      </div>
+      <div class="pill-group stepper" role="group" aria-label="Tempo do sorteio">
+        <button id="time-dec" type="button" aria-label="Menos tempo">−</button>
+        <output id="time-val" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg><span id="time-text">10 s</span></output>
+        <button id="time-inc" type="button" aria-label="Mais tempo">+</button>
+      </div>
+    </div>
+    <p class="caption" id="caption"></p>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-head">
+      <h2 id="sheet-title">Configurações</h2>
+      <button class="text-btn" id="sheet-close" type="button">Pronto</button>
+    </div>
+    <section>
+      <h3>Tamanho do texto</h3>
+      <div class="pill-group seg" id="font-seg" role="group" aria-label="Tamanho do texto">
+        <button type="button" data-scale="0.9" aria-label="Pequeno">P</button>
+        <button type="button" data-scale="1" aria-label="Médio">M</button>
+        <button type="button" data-scale="1.15" aria-label="Grande">G</button>
+        <button type="button" data-scale="1.3" aria-label="Muito grande">GG</button>
+      </div>
+    </section>
+    <section>
+      <h3>Ícone do vencedor</h3>
+      <button class="icon-current" id="icon-current" type="button" aria-expanded="false" aria-controls="icon-grid">
+        <span class="icon-preview" id="icon-preview"></span>
+        <span><b id="icon-name">Meeple</b><small>Toque para trocar</small></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="icon-grid" id="icon-grid" hidden></div>
+      <p class="note">O mesmo ícone marca os times, na cor de cada time.</p>
+    </section>
+    <section id="fs-section" hidden>
+      <button class="wide-btn" id="fullscreen" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        <span id="fs-label">Tela cheia</span>
+      </button>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const TAU = Math.PI * 2;
+  // Cores de peões de madeira, uma por dedo
+  const PALETTE = ['#e8433a','#f5c330','#3fae5a','#3c83db','#f08a24','#8e5bd8','#e8579a','#ede6da','#2bb3c0','#b98552'];
+  const TEAMS = [
+    { name: 'Azul', color: '#3c83db' },
+    { name: 'Laranja', color: '#f08a24' },
+    { name: 'Verde', color: '#3fae5a' },
+    { name: 'Roxo', color: '#9b6be0' }
+  ];
+  const TIMES = [3, 5, 7, 10, 15, 20, 30];
+  const SCALES = [0.9, 1, 1.15, 1.3];
+  const LIMITS = { winner: [1, 4], teams: [2, 4] };
+  const INK = '#f3ecdd', DARK = '#14100a', CREAM = '#f3ecdd';
+  const STORE_KEY = 'sorteador-tf';
+  const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MEEPLE_D = document.getElementById('meeple').getAttribute('d');
+
+  // ---------- utilidades ----------
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const easeOutBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  const easeInOutCubic = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const rgb = hex => { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const rgba = (hex, a) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; };
+  const mix = (a, b, t) => '#' + rgb(a).map((v, i) => Math.round(v + (rgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  const lighten = (c, t) => mix(c, '#ffffff', t);
+  const darken = (c, t) => mix(c, '#000000', t);
+  const lum = hex => { const [r, g, b] = rgb(hex).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * r + .7152 * g + .0722 * b; };
+  const readableOn = hex => { const L = lum(hex); return (L + .05) / (lum(DARK) + .05) >= (lum(INK) + .05) / (L + .05) ? DARK : INK; };
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  function starPts(cx, cy, R, r) {
+    const p = [];
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; p.push((cx + rad * Math.cos(a)).toFixed(1) + ',' + (cy + rad * Math.sin(a)).toFixed(1)); }
+    return p.join(' ');
+  }
+  function rand(n) {
+    if (window.crypto && crypto.getRandomValues) {
+      const a = new Uint32Array(1), lim = Math.floor(0x100000000 / n) * n;
+      let v; do { crypto.getRandomValues(a); v = a[0]; } while (v >= lim);
+      return v % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = rand(i + 1); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+  function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+
+  // ---------- ícones temáticos (desenhados em SVG, 100×100) ----------
+  const S = 'stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
+  const ICONS = [
+    { id: 'meeple', name: 'Meeple', svg: (F, O) => `<path d="${MEEPLE_D}" fill="${F}" stroke="${O}" ${S}/>` },
+    { id: 'coroa', name: 'Coroa', svg: (F, O) => `
+      <path d="M14 74 L9 32 L31 50 L50 20 L69 50 L91 32 L86 74 Z" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="9" cy="28" r="6" fill="${F}" stroke="${O}" stroke-width="4"/>
+      <circle cx="50" cy="15" r="6" fill="${F}" stroke="${O}" stroke-width="4"/>
+      <circle cx="91" cy="28" r="6" fill="${F}" stroke="${O}" stroke-width="4"/>
+      <rect x="13" y="76" width="74" height="15" rx="4" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="32" cy="83.5" r="3.6" fill="${O}"/><circle cx="50" cy="83.5" r="3.6" fill="${O}"/><circle cx="68" cy="83.5" r="3.6" fill="${O}"/>` },
+    { id: 'trofeu', name: 'Troféu', svg: (F, O) => `
+      <path d="M30 24 H15 C15 42 22 52 36 54 M70 24 H85 C85 42 78 52 64 54" fill="none" stroke="${O}" stroke-width="12" stroke-linecap="round"/>
+      <path d="M30 24 H15 C15 42 22 52 36 54 M70 24 H85 C85 42 78 52 64 54" fill="none" stroke="${F}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M27 12 H73 V34 C73 52 63 62 50 64 C37 62 27 52 27 34 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M44 63 H56 V76 H44 Z" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="30" y="76" width="40" height="13" rx="3" fill="${F}" stroke="${O}" ${S}/>
+      <polygon points="${starPts(50, 35, 11, 4.6)}" fill="${O}"/>` },
+    { id: 'dado', name: 'Dado', svg: (F, O) => `
+      <rect x="12" y="12" width="76" height="76" rx="16" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="31" cy="31" r="7" fill="${O}"/><circle cx="69" cy="31" r="7" fill="${O}"/><circle cx="50" cy="50" r="7" fill="${O}"/>
+      <circle cx="31" cy="69" r="7" fill="${O}"/><circle cx="69" cy="69" r="7" fill="${O}"/>` },
+    { id: 'd20', name: 'D20', svg: (F, O) => `
+      <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="${F}" stroke="${O}" ${S}/>
+      <polygon points="50,30 72,67 28,67" fill="${lighten(F, .3)}" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M50 30 L50 5 M50 30 L11 27.5 M50 30 L89 27.5 M28 67 L11 27.5 M28 67 L11 72.5 M28 67 L50 95 M72 67 L89 27.5 M72 67 L89 72.5 M72 67 L50 95" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>` },
+    { id: 'torre', name: 'Torre', svg: (F, O) => `
+      <path d="M20 91 V79 H28 L32 46 H25 V13 H36.5 V23 H44.5 V13 H55.5 V23 H63.5 V13 H75 V46 H68 L72 79 H80 V91 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M32 46 H68" stroke="${O}" stroke-width="3.5"/>
+      <path d="M44 91 V75 A6 6 0 0 1 56 75 V91 Z" fill="${O}"/>
+      <rect x="47" y="52" width="6" height="12" rx="3" fill="${O}"/>` },
+    { id: 'cartas', name: 'Cartas', svg: (F, O) => `
+      <g transform="rotate(-14 50 56)"><rect x="16" y="20" width="46" height="64" rx="7" fill="${F}" stroke="${O}" ${S}/><rect x="23" y="27" width="32" height="50" rx="4" fill="none" stroke="${O}" stroke-width="2.5" opacity=".45"/></g>
+      <g transform="rotate(12 50 56)"><rect x="38" y="16" width="46" height="64" rx="7" fill="${CREAM}" stroke="${O}" ${S}/><path d="M61 60 C48 51 48 40 55 38.5 C58 37.8 60 39.5 61 41.5 C62 39.5 64 37.8 67 38.5 C74 40 74 51 61 60 Z" fill="${F}" stroke="${O}" stroke-width="2.5" stroke-linejoin="round"/></g>` },
+    { id: 'cubo', name: 'Cubo', svg: (F, O) => `
+      <polygon points="50,8 88,29 50,50 12,29" fill="${lighten(F, .3)}" stroke="${O}" ${S}/>
+      <polygon points="12,29 50,50 50,93 12,72" fill="${F}" stroke="${O}" ${S}/>
+      <polygon points="88,29 88,72 50,93 50,50" fill="${darken(F, .25)}" stroke="${O}" ${S}/>` },
+    { id: 'ampulheta', name: 'Ampulheta', svg: (F, O) => `
+      <path d="M27 18 H73 C73 38 58 44 56 50 C58 56 73 62 73 82 H27 C27 62 42 56 44 50 C42 44 27 38 27 18 Z" fill="${CREAM}" stroke="${O}" ${S}/>
+      <path d="M33 26 H67 C65 35 55 41 50 46 C45 41 35 35 33 26 Z" fill="${F}"/>
+      <path d="M31 80 C34 69 45 65 50 63 C55 65 66 69 69 80 Z" fill="${F}"/>
+      <path d="M50 46 V63" stroke="${F}" stroke-width="3" stroke-linecap="round"/>
+      <rect x="16" y="7" width="68" height="11" rx="4" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="16" y="82" width="68" height="11" rx="4" fill="${F}" stroke="${O}" ${S}/>` },
+    { id: 'gema', name: 'Gema', svg: (F, O) => `
+      <polygon points="29,14 71,14 91,37 50,92 9,37" fill="${F}"/>
+      <polygon points="29,14 9,37 37,37" fill="${lighten(F, .4)}"/>
+      <polygon points="50,14 37,37 63,37" fill="${lighten(F, .18)}"/>
+      <path d="M9 37 H91 M29 14 L37 37 L50 14 L63 37 L71 14 M37 37 L50 92 L63 37" fill="none" stroke="${O}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <polygon points="29,14 71,14 91,37 50,92 9,37" fill="none" stroke="${O}" ${S}/>` },
+    { id: 'pocao', name: 'Poção', svg: (F, O) => {
+      const flask = 'M41 12 H59 V22 H56 V37 C71 43 82 55 82 69 C82 85 68 95 50 95 C32 95 18 85 18 69 C18 55 29 43 44 37 V22 H41 Z';
+      return `<path d="${flask}" fill="${CREAM}"/>
+      <path d="M21.5 65 C31 59 40 70 50 64 C60 58 69 69 78.5 64 C80.5 81 67 91.5 50 91.5 C33 91.5 19.5 81 21.5 65 Z" fill="${F}"/>
+      <circle cx="40" cy="78" r="4" fill="${CREAM}" opacity=".85"/><circle cx="56" cy="72" r="2.6" fill="${CREAM}" opacity=".85"/><circle cx="62" cy="83" r="3.2" fill="${CREAM}" opacity=".85"/>
+      <path d="${flask}" fill="none" stroke="${O}" ${S}/>
+      <rect x="39" y="5" width="22" height="11" rx="3" fill="#b98552" stroke="${O}" stroke-width="4"/>`; } },
+    { id: 'xadrez', name: 'Peão', svg: (F, O) => `
+      <path d="M39 50 H61 C61 63 67 71 74 78 H26 C33 71 39 63 39 50 Z" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="33" y="41" width="34" height="10" rx="5" fill="${F}" stroke="${O}" ${S}/>
+      <circle cx="50" cy="25" r="14" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="19" y="78" width="62" height="13" rx="4" fill="${F}" stroke="${O}" ${S}/>` }
+  ];
+  const iconById = id => ICONS.find(i => i.id === id) || ICONS[0];
+  const iconSvg = (id, F, O = DARK) => `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="-4 -4 108 108">${iconById(id).svg(F, O)}</svg>`;
+  const imgCache = new Map();
+  function iconImg(id, F) {
+    const key = id + F;
+    let im = imgCache.get(key);
+    if (!im) { im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg(id, F)); imgCache.set(key, im); }
+    return im;
+  }
+
+  // ---------- elementos ----------
+  const $ = id => document.getElementById(id);
+  const canvas = $('table');
+  const ctx = canvas.getContext('2d');
+  const body = document.body;
+  const statusEl = $('status'), bigEl = $('status-big'), subEl = $('status-sub'), noteEl = $('status-note');
+  const captionEl = $('caption'), hintSubEl = $('hint-sub');
+  const countVal = $('count-val'), timeText = $('time-text');
+  const sheet = $('sheet'), grid = $('icon-grid'), iconBtn = $('icon-current');
+  const modeBtns = [...document.querySelectorAll('.controls .seg button')];
+  const fontBtns = [...document.querySelectorAll('#font-seg button')];
+
+  const settings = { mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'meeple' };
+
+  let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
+  let phase = 'idle'; // idle | counting | result
+  let countStart = 0, countMs = 10000, lastSecond = null;
+  let result = null, oldResult = null, statusInk = INK;
+  const fingers = new Map();
+
+  let wakeLock = null;
+  async function keepAwake() {
+    try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && fingers.size) keepAwake(); });
+
+  function pickColor() {
+    const used = new Map(PALETTE.map(c => [c, 0]));
+    for (const f of fingers.values()) used.set(f.color, (used.get(f.color) || 0) + 1);
+    const min = Math.min(...used.values());
+    const options = PALETTE.filter(c => used.get(c) === min);
+    return options[rand(options.length)];
+  }
+
+  // ---------- configurações ----------
+  const minFingers = () => settings.mode === 'winner' ? settings.winners + 1 : settings.teams;
+  const countKey = () => settings.mode === 'winner' ? 'winners' : 'teams';
+
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch (e) {} }
+  function load(data) {
+    let src = data && data.settings;
+    if (!src) { try { src = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { src = null; } }
+    if (!src) return;
+    if (src.mode === 'winner' || src.mode === 'teams') settings.mode = src.mode;
+    if (Number.isInteger(src.winners)) settings.winners = clamp(src.winners, ...LIMITS.winner);
+    if (Number.isInteger(src.teams)) settings.teams = clamp(src.teams, ...LIMITS.teams);
+    if (TIMES.includes(src.seconds)) settings.seconds = src.seconds;
+    if (SCALES.includes(src.scale)) settings.scale = src.scale;
+    if (ICONS.some(i => i.id === src.icon)) settings.icon = src.icon;
+  }
+
+  function renderSettings() {
+    const m = settings.mode, key = countKey(), [lo, hi] = LIMITS[m], v = settings[key];
+    document.documentElement.style.fontSize = (16 * settings.scale) + 'px';
+    modeBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    fontBtns.forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.scale) === settings.scale)));
+    countVal.textContent = m === 'winner' ? plural(v, 'vencedor', 'vencedores') : `${v} times`;
+    $('count-dec').disabled = v <= lo;
+    $('count-inc').disabled = v >= hi;
+    const ti = TIMES.indexOf(settings.seconds);
+    timeText.textContent = `${settings.seconds} s`;
+    $('time-dec').disabled = ti <= 0;
+    $('time-inc').disabled = ti >= TIMES.length - 1;
+    captionEl.textContent = m === 'winner'
+      ? (v === 1 ? 'Sorteia um dedo. Bom para decidir quem começa a partida.' : `Sorteia ${v} dedos de uma vez.`)
+      : `Divide os dedos em ${v} times do tamanho mais parecido possível.`;
+    const min = minFingers();
+    hintSubEl.textContent = `A contagem de ${settings.seconds} segundos começa quando houver ${min} dedos na tela. Quem chegar depois ainda entra; se ficar menos de ${min}, ela para.`;
+    $('icon-preview').innerHTML = iconSvg(settings.icon, '#f5c330');
+    $('icon-name').textContent = iconById(settings.icon).name;
+    grid.querySelectorAll('.icon-opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.icon === settings.icon)));
+    vignette = null;
+  }
+
+  function changeSetting(fn) {
+    if (phase !== 'idle') return;
+    fn();
+    save();
+    renderSettings();
+    if (fingers.size) onFingersChanged(performance.now()); else updateHud();
+  }
+  modeBtns.forEach(b => b.addEventListener('click', () => changeSetting(() => { settings.mode = b.dataset.mode; })));
+  $('count-dec').addEventListener('click', () => changeSetting(() => { const k = countKey(); settings[k] = clamp(settings[k] - 1, ...LIMITS[settings.mode]); }));
+  $('count-inc').addEventListener('click', () => changeSetting(() => { const k = countKey(); settings[k] = clamp(settings[k] + 1, ...LIMITS[settings.mode]); }));
+  $('time-dec').addEventListener('click', () => changeSetting(() => { const i = TIMES.indexOf(settings.seconds); settings.seconds = TIMES[Math.max(0, i - 1)]; }));
+  $('time-inc').addEventListener('click', () => changeSetting(() => { const i = TIMES.indexOf(settings.seconds); settings.seconds = TIMES[Math.min(TIMES.length - 1, i + 1)]; }));
+
+  // painel de configurações
+  grid.innerHTML = ICONS.map(ic => `<button type="button" class="icon-opt" data-icon="${ic.id}" aria-pressed="false"><span class="icon-art" aria-hidden="true">${iconSvg(ic.id, '#f5c330')}</span><span>${ic.name}</span></button>`).join('');
+  function setGrid(open) { grid.hidden = !open; iconBtn.setAttribute('aria-expanded', String(open)); }
+  function openSheet() { if (phase !== 'idle' || fingers.size) return; sheet.hidden = false; setGrid(false); $('sheet-close').focus(); }
+  function closeSheet() { sheet.hidden = true; setGrid(false); $('open-settings').focus(); }
+  $('open-settings').addEventListener('click', openSheet);
+  $('sheet-close').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', e => { if (e.target === sheet) closeSheet(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+  iconBtn.addEventListener('click', () => setGrid(grid.hidden));
+  grid.addEventListener('click', e => {
+    const b = e.target.closest('.icon-opt');
+    if (!b) return;
+    settings.icon = b.dataset.icon; save(); renderSettings(); setGrid(false); iconBtn.focus();
+  });
+  fontBtns.forEach(b => b.addEventListener('click', () => { settings.scale = Number(b.dataset.scale); save(); renderSettings(); }));
+
+  // tela cheia
+  const fsBtn = $('fullscreen');
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) $('fs-section').hidden = false;
+  const syncFs = () => { $('fs-label').textContent = isFs() ? 'Sair da tela cheia' : 'Tela cheia'; };
+  document.addEventListener('fullscreenchange', syncFs);
+  document.addEventListener('webkitfullscreenchange', syncFs);
+  fsBtn.addEventListener('click', async () => {
+    try {
+      if (isFs()) await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+      else { const el = document.documentElement; await (el.requestFullscreen ? el.requestFullscreen() : el.webkitRequestFullscreen()); }
+    } catch (e) { $('fs-section').hidden = true; }
+  });
+
+  // ---------- toques ----------
+  function onDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (!sheet.hidden) return;
+    const now = performance.now();
+    if (phase === 'result') return; // rodada em andamento: espera todo mundo tirar o dedo
+    if (result) { oldResult = { res: result, at: now }; result = null; setStatusInk(INK); } // nova rodada apaga a anterior
+    fingers.set(e.pointerId, { id: e.pointerId, x: e.clientX, y: e.clientY, color: pickColor(), born: now, wob: Math.random() * TAU });
+    buzz(12);
+    keepAwake();
+    onFingersChanged(now);
+  }
+  function onMove(e) {
+    const f = fingers.get(e.pointerId);
+    if (!f) return;
+    f.x = e.clientX; f.y = e.clientY;
+    if (phase === 'result' && result) {
+      const m = result.marks.find(m => m.id === e.pointerId && !m.liftedAt);
+      if (m) { m.x = f.x; m.y = f.y; }
+    }
+  }
+  function onUp(e) {
+    if (!fingers.has(e.pointerId)) return;
+    const now = performance.now();
+    fingers.delete(e.pointerId);
+    if (phase === 'result') {
+      const m = result && result.marks.find(m => m.id === e.pointerId && !m.liftedAt);
+      if (m) m.liftedAt = now;
+      if (fingers.size === 0) phase = 'idle'; // resultado continua marcado na mesa
+      updateHud();
+      return;
+    }
+    onFingersChanged(now);
+  }
+  canvas.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, { passive: true });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ---------- regras ----------
+  // A contagem começa ao atingir o mínimo e segue mesmo com gente entrando ou saindo;
+  // só para se ficar abaixo do mínimo.
+  function onFingersChanged(now) {
+    const enough = fingers.size >= minFingers();
+    if (phase === 'counting' && !enough) phase = 'idle';
+    else if (phase === 'idle' && enough) { phase = 'counting'; countStart = now; countMs = settings.seconds * 1000; lastSecond = null; }
+    updateHud();
+  }
+
+  function resolve(now) {
+    const list = shuffle([...fingers.values()]);
+    const marks = list.map((f, i) => ({ id: f.id, x: f.x, y: f.y, born: f.born, wob: f.wob, color: f.color, order: i, liftedAt: 0, winner: false, team: null }));
+    if (settings.mode === 'winner') {
+      const k = Math.min(settings.winners, marks.length - 1);
+      marks.slice(0, k).forEach((m, i) => { m.winner = true; m.rank = i; });
+      result = { mode: 'winner', at: now, marks, count: k };
+      if (k === 1) setStatusInk(readableOn(marks[0].color));
+    } else {
+      const t = settings.teams;
+      // rodízio com a ordem dos times sorteada: quem fica com um jogador a mais também é aleatório
+      const teamOrder = shuffle([...Array(t).keys()]);
+      marks.forEach((m, i) => { m.team = teamOrder[i % t]; });
+      result = { mode: 'teams', at: now, marks, count: t };
+    }
+    phase = 'result';
+    buzz([70, 50, 140]);
+    updateHud();
+  }
+
+  function setStatusInk(c) { if (c !== statusInk) { statusInk = c; document.documentElement.style.setProperty('--status-ink', c); } }
+
+  // ---------- textos ----------
+  function updateHud() {
+    const n = fingers.size;
+    body.dataset.phase = phase;
+    body.dataset.touching = String(n > 0);
+    body.dataset.showing = String(!!result);
+    bigEl.classList.remove('is-number');
+    noteEl.textContent = '';
+    if (phase === 'counting') {
+      statusEl.classList.add('on');
+      bigEl.classList.add('is-number');
+      bigEl.textContent = String(Math.max(1, Math.ceil((countMs - (performance.now() - countStart)) / 1000)));
+      subEl.textContent = settings.mode === 'winner'
+        ? `${n} jogadores · ${plural(settings.winners, 'vencedor', 'vencedores')}`
+        : `${n} jogadores · ${settings.teams} times`;
+    } else if (result) {
+      statusEl.classList.add('on');
+      if (result.mode === 'winner') {
+        bigEl.textContent = result.count === 1 ? 'Temos um vencedor!' : `Temos ${result.count} vencedores!`;
+        subEl.textContent = '';
+      } else {
+        bigEl.textContent = 'Times sorteados';
+        subEl.innerHTML = TEAMS.slice(0, result.count)
+          .map((tm, i) => `<b><span class="dot" style="background:${tm.color}"></span>${tm.name} ${result.marks.filter(m => m.team === i).length}</b>`)
+          .join(' &nbsp;·&nbsp; ');
+      }
+      noteEl.textContent = phase === 'result' ? 'Podem tirar os dedos: o resultado fica marcado na mesa.' : 'Toque na mesa para uma nova rodada.';
+    } else if (n > 0) {
+      const min = minFingers(), missing = min - n;
+      statusEl.classList.add('on');
+      bigEl.textContent = missing === 1 ? 'Falta mais um dedo' : `Faltam mais ${missing} dedos`;
+      const what = settings.mode === 'winner'
+        ? (settings.winners === 1 ? 'Para sortear um vencedor' : `Para sortear ${settings.winners} vencedores`)
+        : `Para ${settings.teams} times`;
+      subEl.textContent = `${what}, são precisos pelo menos ${min} jogadores.`;
+    } else {
+      statusEl.classList.remove('on');
+    }
+  }
+  function setCount(sec) { if (phase === 'counting') bigEl.textContent = String(Math.max(1, sec)); }
+
+  // ---------- desenho ----------
+  function makeFelt() {
+    const s = 192, c = document.createElement('canvas');
+    c.width = c.height = s;
+    const x = c.getContext('2d'), img = x.createImageData(s, s), base = rgb('#11281f');
+    for (let i = 0; i < img.data.length; i += 4) {
+      const n = (Math.random() - .5) * 12;
+      img.data[i] = base[0] + n; img.data[i + 1] = base[1] + n * 1.15; img.data[i + 2] = base[2] + n; img.data[i + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    return ctx.createPattern(c, 'repeat');
+  }
+
+  function resize() {
+    DPR = Math.min(2.5, window.devicePixelRatio || 1);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+    vignette = null;
+  }
+  window.addEventListener('resize', resize);
+
+  const baseRadius = () => Math.max(38, Math.min(60, Math.min(W, H) * 0.115));
+  const badgeRadius = r0 => r0 * .8;
+  const topClear = () => 150 * settings.scale;
+  // acima do dedo se couber; senão abaixo
+  const aboveY = (m, r, gap) => (m.y - r - gap > topClear() ? m.y - r - gap : m.y + r + gap);
+
+  function drawToken(f, color, now, r0, alpha, progress, scale) {
+    const pop = easeOutBack(clamp((now - f.born) / 260));
+    const breathe = reduceMotion ? 0 : Math.sin(now / 260 + f.wob) * 0.045;
+    const r = r0 * pop * (1 + breathe) * (scale == null ? 1 : scale);
+    if (r <= 0.5 || alpha <= 0.01) return 0;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const g = ctx.createRadialGradient(f.x, f.y, r * .4, f.x, f.y, r * 1.9);
+    g.addColorStop(0, rgba(color, .38)); g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.9, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, TAU);
+    ctx.fillStyle = rgba(color, .3); ctx.fill();
+    const lw = Math.max(5, r * .14);
+    ctx.lineWidth = lw; ctx.strokeStyle = color; ctx.stroke();
+    if (progress > 0) {
+      const pr = r + lw / 2 + 10;
+      ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(243,236,221,.15)';
+      ctx.beginPath(); ctx.arc(f.x, f.y, pr, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = 'rgba(243,236,221,.95)';
+      ctx.beginPath(); ctx.arc(f.x, f.y, pr, -Math.PI / 2, -Math.PI / 2 + progress * TAU); ctx.stroke();
+    }
+    ctx.restore();
+    return r;
+  }
+
+  function drawWaves(x, y, r, color, alpha, t) {
+    if (reduceMotion || alpha <= 0.01) return;
+    ctx.save();
+    ctx.lineWidth = 3; ctx.strokeStyle = color;
+    for (let i = 0; i < 3; i++) {
+      const p = ((t / 1600) + i / 3) % 1;
+      ctx.globalAlpha = alpha * (1 - p) * .45;
+      ctx.beginPath(); ctx.arc(x, y, r + p * r * 1.6, 0, TAU); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGlow(x, y, R, color, alpha) {
+    if (alpha <= 0.01) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const g = ctx.createRadialGradient(x, y, R * .6, x, y, R * 2.4);
+    g.addColorStop(0, rgba(color, .5)); g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, R * 2.4, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // ficha redonda com o ícone escolhido
+  function drawBadge(x, y, R, color, alpha) {
+    if (R <= 1 || alpha <= 0.01) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.arc(x + 2, y + 4, R, 0, TAU); ctx.fill();
+    ctx.fillStyle = readableOn(color) === DARK ? '#1b3229' : CREAM;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+    ctx.lineWidth = Math.max(4, R * .13); ctx.strokeStyle = color; ctx.stroke();
+    const s = R * 1.42, im = iconImg(settings.icon, color);
+    if (im.complete && im.naturalWidth) ctx.drawImage(im, x - s / 2, y - s / 2, s, s);
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function drawPill(x, y, team, alpha, scale) {
+    if (alpha <= 0.01) return;
+    const sc = settings.scale;
+    ctx.save();
+    ctx.font = `800 ${Math.round(14 * sc)}px "Nunito Sans", system-ui, sans-serif`;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    const label = team.name.toUpperCase();
+    const ph = 30 * sc, pw = ctx.measureText(label).width + 22 * sc;
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y); ctx.scale(scale, scale);
+    roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2);
+    ctx.fillStyle = team.color; ctx.fill();
+    ctx.fillStyle = DARK;
+    ctx.fillText(label, -pw / 2 + 11 * sc, 1);
+    ctx.restore();
+  }
+
+  function drawWinnerResult(res, now, fade, r0) {
+    const t = now - res.at, e = easeInOutCubic(clamp(t / 750));
+    const winners = res.marks.filter(m => m.winner);
+    const single = winners.length === 1;
+    const R = badgeRadius(r0);
+
+    // brilho: a cor do vencedor inunda a mesa e depois some
+    if (single) {
+      const w = winners[0], f = 1 - clamp((t - 1100) / 800);
+      if (f > 0) {
+        const maxD = Math.hypot(Math.max(w.x, W - w.x), Math.max(w.y, H - w.y));
+        ctx.save(); ctx.globalAlpha = fade * f;
+        ctx.fillStyle = rgba(w.color, .93);
+        ctx.beginPath(); ctx.arc(w.x, w.y, maxD * easeInOutCubic(clamp(t / 700)) + 1, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+    } else {
+      const f = 1 - clamp(t / 700);
+      if (f > 0) { ctx.fillStyle = rgba(INK, .35 * f * fade); ctx.fillRect(0, 0, W, H); }
+    }
+
+    for (const m of res.marks) if (!m.winner && t < 800) drawToken(m, m.color, now, r0, fade * (1 - e), 0, 1 - .6 * e);
+
+    winners.forEach((w, i) => {
+      const appear = clamp((t - 350 - i * 200) / 650);
+      const grow = 1 + .3 * easeOutBack(clamp(t / 750));
+      const r = r0 * grow;
+      const fromY = aboveY(w, r0 * 1.3, R + 12);
+      if (!w.liftedAt) {
+        const flooding = single && t < 1900;
+        if (flooding) {
+          const on = readableOn(w.color);
+          drawWaves(w.x, w.y, r, on, fade * e, t);
+          ctx.save(); ctx.globalAlpha = fade;
+          ctx.beginPath(); ctx.arc(w.x, w.y, r, 0, TAU);
+          ctx.fillStyle = rgba(on, .16); ctx.fill();
+          ctx.lineWidth = Math.max(7, r * .16); ctx.strokeStyle = on; ctx.stroke();
+          ctx.restore();
+        } else {
+          drawWaves(w.x, w.y, r, w.color, fade * e, t);
+          drawToken(w, w.color, now, r0, fade, 0, grow);
+        }
+        if (appear > 0) {
+          const drop = (1 - easeOutBack(appear)) * -60;
+          drawBadge(w.x, fromY + drop, R, w.color, fade * clamp(appear * 3));
+        }
+      } else {
+        // dedo saiu: a ficha desce e fica no lugar do campeão
+        const g = easeOutCubic(clamp((now - w.liftedAt) / 450));
+        const y = fromY + (w.y - fromY) * g;
+        drawGlow(w.x, w.y, R, w.color, fade * g);
+        drawWaves(w.x, w.y, R * 1.1, w.color, fade * g * .8, t);
+        drawBadge(w.x, y, R, w.color, fade * Math.max(clamp(appear * 3), g));
+      }
+    });
+  }
+
+  function drawTeamResult(res, now, fade, r0) {
+    const t = now - res.at;
+    const f = 1 - clamp(t / 600);
+    if (f > 0) { ctx.fillStyle = rgba(INK, .3 * f * fade); ctx.fillRect(0, 0, W, H); }
+    const R = badgeRadius(r0), sc = settings.scale;
+    const pills = [];
+    for (const m of res.marks) {
+      const team = TEAMS[m.team];
+      const k = clamp((t - m.order * 160) / 420), kt = easeOutCubic(k);
+      if (!m.liftedAt) {
+        const color = k <= 0 ? m.color : mix(m.color, team.color, kt);
+        const r = drawToken(m, color, now, r0, fade, 0, 1 + .28 * Math.sin(Math.PI * k)) || r0;
+        if (k > 0) pills.push([m.x, aboveY(m, r, 30 * sc), team, fade * kt, .8 + .2 * kt]);
+      } else {
+        // dedo saiu: fica uma ficha com o ícone na cor do time
+        const g = clamp((now - m.liftedAt) / 380);
+        drawGlow(m.x, m.y, R, team.color, fade * g * .8);
+        drawBadge(m.x, m.y, R * Math.max(.05, easeOutBack(g)), team.color, fade);
+        const below = m.y + R + 26 * sc < H - 12 ? m.y + R + 26 * sc : m.y - R - 26 * sc;
+        pills.push([m.x, below, team, fade * Math.max(kt, g), 1]);
+      }
+    }
+    for (const p of pills) drawPill(...p);
+  }
+
+  function drawResult(res, now, fade, r0) {
+    if (res.mode === 'winner') drawWinnerResult(res, now, fade, r0); else drawTeamResult(res, now, fade, r0);
+  }
+
+  function draw(now) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (!felt) felt = makeFelt();
+    ctx.fillStyle = felt; ctx.fillRect(0, 0, W, H);
+    if (!vignette) {
+      vignette = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.hypot(W, H) * .62);
+      vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,.5)');
+    }
+    ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H);
+
+    const r0 = baseRadius();
+    if (oldResult) {
+      const a = 1 - clamp((now - oldResult.at) / 350);
+      if (a <= 0) oldResult = null; else drawResult(oldResult.res, now, a, r0);
+    }
+    if (result) drawResult(result, now, 1, r0);
+    if (phase !== 'result') {
+      const p = phase === 'counting' ? clamp((now - countStart) / countMs) : 0;
+      for (const f of fingers.values()) drawToken(f, f.color, now, r0, 1, p, 1);
+    }
+  }
+
+  function frame() {
+    const now = performance.now();
+    if (phase === 'counting') {
+      const el = now - countStart;
+      const sec = Math.ceil((countMs - el) / 1000);
+      if (sec !== lastSecond) { lastSecond = sec; setCount(sec); if (sec > 0 && sec <= 3) buzz(8); }
+      if (el >= countMs) resolve(now);
+    }
+    if (result && result.mode === 'winner' && result.count === 1 && now - result.at > 1500) setStatusInk(INK);
+    draw(now);
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- início ----------
+  function start(data) {
+    load(data);
+    renderSettings();
+    resize();
+    updateHud();
+    requestAnimationFrame(frame);
+  }
+  window.claude?.hot?.snapshot?.(() => ({ settings }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+</script>
+</body>
+</html>
