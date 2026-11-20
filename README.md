@@ -9,6 +9,7 @@ Sorteador para jogos de tabuleiro: todo mundo põe um dedo na tela e o app sorte
 - Ampulheta: temporizador de turno com tempos prontos, tempo livre e alarme
 - Bomba: tempo secreto sorteado entre um mínimo e um máximo, com pavio aceso, tic-tac e explosão
 - Dados: d2 a d100 e até 6 jogadores, cada um com sua cor e sua quantidade de dados (até 10)
+- Placar: tabela de pontuação para até 6 jogadores, com campos de pontos e penalidades, totais e posição
 - Funciona sem internet depois de instalado na tela inicial do celular
 
 Publicado com GitHub Pages. Para instalar: abra o endereço do site no celular e use "Adicionar à Tela de Início" (iPhone, Safari) ou "Instalar app" (Android, Chrome).
