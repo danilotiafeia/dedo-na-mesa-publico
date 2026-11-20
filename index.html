@@ -332,6 +332,28 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .wide-ghost{width:100%;justify-content:center}
 .ghost-btn.confirm{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
+/* Lista de cores dos jogadores */
+.color-pop{
+  position:fixed;z-index:20;width:17.5rem;max-width:calc(100vw - 24px);padding:.65rem;border-radius:1rem;
+  background:var(--panel);border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.6);display:grid;gap:.45rem
+}
+.color-pop h4{margin:.1rem .25rem 0;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.color-list{display:grid;grid-template-columns:1fr 1fr;gap:.25rem}
+.color-opt{
+  display:flex;align-items:center;gap:.5rem;min-height:2.6rem;font:inherit;font-size:.9rem;font-weight:700;color:var(--ink);
+  background:transparent;border:0;border-radius:.7rem;padding:.35rem .45rem;cursor:pointer;text-align:left
+}
+.color-opt:hover{background:rgba(240,246,246,.08)}
+.color-opt:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.color-opt .sw{
+  width:1.65rem;height:1.65rem;border-radius:50%;flex:none;border:2px solid rgba(240,246,246,.8);
+  display:grid;place-items:center;font-size:.85rem;font-weight:800;line-height:1
+}
+.color-opt small{margin-left:auto;font-size:.72rem;font-weight:800;color:var(--muted)}
+.color-opt[aria-selected="true"]{background:rgba(209,31,29,.2);box-shadow:inset 0 0 0 1px var(--accent)}
+.color-pop p{margin:.1rem .25rem 0;font-size:.75rem;color:var(--muted);line-height:1.35}
+.swatch[aria-expanded="true"]{outline:3px solid var(--accent);outline-offset:2px}
+
 /* Dados */
 .chips{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{
@@ -591,7 +613,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       <h3 class="label">Jogadores</h3>
       <div class="players" id="players"></div>
       <button class="add-player" id="add-player" type="button">+ Adicionar jogador</button>
-      <p class="note">Toque na bolinha para trocar a cor. Até 6 jogadores.</p>
+      <p class="note">Toque na bolinha para escolher a cor. Até 6 jogadores.</p>
     </section>
     <button class="primary wide" id="dice-go" type="button">Ir para a mesa</button>
   </div>
@@ -644,7 +666,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     <section>
       <h3 class="label">Nomes</h3>
       <div class="players" id="score-names"></div>
-      <p class="note">Toque na bolinha para trocar a cor. Os nomes dos campos podem ser trocados direto na tabela.</p>
+      <p class="note">Toque na bolinha para escolher a cor. Os nomes dos campos podem ser trocados direto na tabela.</p>
     </section>
     <section>
       <h3 class="label">Quem vence</h3>
@@ -673,6 +695,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   </div>
 </section>
 
+<div class="color-pop" id="color-pop" hidden></div>
+
 <nav class="tabbar" aria-label="Ferramentas">
   <button class="tab" type="button" data-go="draw" aria-current="page"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#meeple" fill="currentColor"/></svg>Sorteio</button>
   <button class="tab" type="button" data-go="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12M7.5 3c0 5 4.5 6 4.5 9s-4.5 4-4.5 9M16.5 3c0 5-4.5 6-4.5 9s4.5 4 4.5 9"/></svg>Ampulheta</button>
@@ -699,6 +723,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const PRESETS = [30, 45, 60, 90, 120];
   const FACES = [2, 3, 4, 6, 8, 10, 12, 20, 100];
   const DICE_COLORS = ['#e8433a', '#3c83db', '#3fae5a', '#f5c330', '#8e5bd8', '#f08a24', '#e8579a', '#2bb3c0', '#ede6da', '#b98552'];
+  const COLOR_NAMES = { '#e8433a': 'Vermelho', '#3c83db': 'Azul', '#3fae5a': 'Verde', '#f5c330': 'Amarelo', '#8e5bd8': 'Roxo', '#f08a24': 'Laranja', '#e8579a': 'Rosa', '#2bb3c0': 'Ciano', '#ede6da': 'Branco', '#b98552': 'Marrom' };
   const MAX_PLAYERS = 6, MAX_QTY = 10;
   const BOMB_LIMIT = 3600; // segundos
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1806,7 +1831,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     scoreStepper('sn', 'pen', n => n === 0 ? 'Nenhum' : plural(n, 'campo', 'campos'));
     $('score-names').innerHTML = sc.players.map((pl, j) => `
       <div class="player-row" data-j="${j}">
-        <button type="button" class="swatch" style="background:${pl.color}" aria-label="Trocar a cor do Jogador ${j + 1}"></button>
+        <button type="button" class="swatch" style="background:${pl.color}" aria-haspopup="listbox" aria-expanded="false" aria-label="Cor do Jogador ${j + 1}: ${COLOR_NAMES[pl.color]}"></button>
         <input class="name-input" type="text" maxlength="24" autocomplete="off" placeholder="Jogador ${j + 1}" value="${esc(pl.name)}" aria-label="Nome do Jogador ${j + 1}">
       </div>`).join('');
     syncWinSeg();
@@ -1832,12 +1857,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (row && e.target.classList.contains('name-input')) { SC().players[Number(row.dataset.j)].name = e.target.value.slice(0, 24); save(); }
   });
   $('score-names').addEventListener('click', e => {
-    if (!e.target.closest('.swatch')) return;
-    const j = Number(e.target.closest('.player-row').dataset.j), pls = SC().players, used = pls.map(p => p.color);
-    let k = DICE_COLORS.indexOf(pls[j].color);
-    for (let n = 0; n < DICE_COLORS.length; n++) { k = (k + 1) % DICE_COLORS.length; if (!used.includes(DICE_COLORS[k])) break; }
-    pls[j].color = DICE_COLORS[k];
-    scoreChanged(true);
+    const sw = e.target.closest('.swatch');
+    if (!sw) return;
+    const j = Number(sw.closest('.player-row').dataset.j);
+    openColorPop(sw, SC().players, j, () => scoreChanged(true));
   });
   document.querySelectorAll('.win-seg').forEach(g => g.addEventListener('click', e => {
     const b = e.target.closest('button');
@@ -1939,6 +1962,60 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     SC().vals = {}; save(); renderScoreTable();
   });
 
+  // ---------- lista suspensa de cores ----------
+  // Usada no Placar e nos Dados. Escolher uma cor que outro jogador já usa troca as cores entre os dois.
+  const colorPop = $('color-pop');
+  let colorPick = null;
+  function openColorPop(anchor, players, idx, done) {
+    if (colorPick && colorPick.anchor === anchor) { closeColorPop(); return; }
+    closeColorPop();
+    const current = players[idx].color;
+    const owner = {};
+    players.forEach((pl, k) => { if (k !== idx) owner[pl.color] = 'J' + (k + 1); });
+    colorPop.innerHTML = `<h4>Cor do Jogador ${idx + 1}</h4>
+      <div class="color-list" role="listbox" aria-label="Cores para o Jogador ${idx + 1}">${DICE_COLORS.map(c => `
+        <button type="button" class="color-opt" role="option" data-c="${c}" aria-selected="${c === current}">
+          <span class="sw" style="background:${c};color:${readableOn(c)}">${c === current ? '✓' : ''}</span>${COLOR_NAMES[c]}${owner[c] ? `<small>${owner[c]}</small>` : ''}
+        </button>`).join('')}</div>
+      ${Object.keys(owner).length ? '<p>Escolher uma cor em uso troca as cores entre os jogadores.</p>' : ''}`;
+    colorPop.hidden = false;
+    // abre logo abaixo da bolinha; se não couber, abre acima
+    const r = anchor.getBoundingClientRect(), pw = colorPop.offsetWidth, ph = colorPop.offsetHeight;
+    const bar = document.querySelector('.tabbar');
+    const barTop = bar && getComputedStyle(bar).display !== 'none' ? bar.getBoundingClientRect().top : window.innerHeight;
+    let top = r.bottom + 8;
+    if (top + ph > barTop - 8) top = Math.max(12, r.top - ph - 8);
+    colorPop.style.left = Math.min(Math.max(12, r.left), window.innerWidth - pw - 12) + 'px';
+    colorPop.style.top = top + 'px';
+    anchor.setAttribute('aria-expanded', 'true');
+    colorPick = { anchor, players, idx, done };
+    const sel = colorPop.querySelector('[aria-selected="true"]');
+    if (sel) sel.focus({ preventScroll: true });
+  }
+  function closeColorPop() {
+    if (colorPop.hidden) return;
+    colorPop.hidden = true;
+    if (colorPick) { colorPick.anchor.setAttribute('aria-expanded', 'false'); colorPick = null; }
+  }
+  colorPop.addEventListener('click', e => {
+    const b = e.target.closest('.color-opt');
+    if (!b || !colorPick) return;
+    const { players, idx, done } = colorPick, c = b.dataset.c, old = players[idx].color;
+    const other = players.findIndex((pl, k) => k !== idx && pl.color === c);
+    if (other >= 0) players[other].color = old;
+    players[idx].color = c;
+    closeColorPop();
+    done();
+  });
+  document.addEventListener('pointerdown', e => {
+    if (colorPop.hidden || colorPop.contains(e.target) || (colorPick && colorPick.anchor.contains(e.target))) return;
+    closeColorPop();
+  }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeColorPop(); });
+  Object.values(PANELS).forEach(el => el.addEventListener('scroll', closeColorPop, { passive: true }));
+  window.addEventListener('resize', closeColorPop);
+  window.addEventListener('hashchange', closeColorPop);
+
   // ---------- dados ----------
   // Uma "pele" por tipo de dado: moeda (d2), triângulos (d3/d4), cubo com pintas (d6),
   // diamante (d8), pipa (d10/d100), dodecaedro (d12) e icosaedro (d20).
@@ -2015,14 +2092,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     if (e.target.closest('.remove') && pls.length > 1) { pls.splice(i, 1); diceChanged(); return; }
     if (e.target.closest('.qty-dec')) { pl.qty = clamp(pl.qty - 1, 1, MAX_QTY); diceChanged(); return; }
     if (e.target.closest('.qty-inc')) { pl.qty = clamp(pl.qty + 1, 1, MAX_QTY); diceChanged(); return; }
-    if (e.target.closest('.swatch')) {
-      // próxima cor que ninguém está usando
-      const used = pls.map(p => p.color);
-      let k = DICE_COLORS.indexOf(pl.color);
-      for (let n = 0; n < DICE_COLORS.length; n++) { k = (k + 1) % DICE_COLORS.length; if (!used.includes(DICE_COLORS[k])) break; }
-      pl.color = DICE_COLORS[k];
-      diceChanged();
-    }
+    const sw = e.target.closest('.swatch');
+    if (sw) openColorPop(sw, pls, i, diceChanged);
   });
   $('dice-go').addEventListener('click', () => { pushedSub = true; go('roll'); });
   $('roll-back').addEventListener('click', () => goBack('dice'));
@@ -2032,7 +2103,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     $('face-chips').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.faces) === faces)));
     $('players').innerHTML = players.map((p, i) => `
       <div class="player-row" data-i="${i}">
-        <button type="button" class="swatch" style="background:${p.color}" aria-label="Trocar a cor do Jogador ${i + 1}"></button>
+        <button type="button" class="swatch" style="background:${p.color}" aria-haspopup="listbox" aria-expanded="false" aria-label="Cor do Jogador ${i + 1}: ${COLOR_NAMES[p.color]}"></button>
         <div class="player-info">
           <b>Jogador ${i + 1}</b>
           <div class="pill-group stepper" role="group" aria-label="Dados do Jogador ${i + 1}">
