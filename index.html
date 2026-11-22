@@ -515,6 +515,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   box-shadow:0 0 0 6px #17181c,0 0 0 7.5px rgba(240,246,246,.18),0 10px 24px rgba(0,0,0,.6)
 }
 .lp-hub .logo{width:82%;height:82%;border-radius:32%}
+.lp-hub.small{width:2.7rem;height:2.7rem;margin:-1.35rem 0 0 -1.35rem;box-shadow:0 0 0 4px #17181c,0 0 0 5.5px rgba(240,246,246,.18),0 8px 18px rgba(0,0,0,.6)}
 .lp-hub:active{transform:scale(.93)}
 .lp-menu-back{position:fixed;inset:0;z-index:12;background:rgba(6,7,9,.72);display:grid;place-items:center;padding:1.25rem}
 .lp-menu{
@@ -2422,13 +2423,13 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     go('lpboard');
   }
 
-  // Frente a frente: com 2 jogadores, um em cada ponta do celular (o de cima virado);
-  // com 3 ou mais, metade em cada lado comprido, cada coluna virada para o seu lado.
+  // Frente a frente: celular deitado, sempre metade à esquerda e metade à direita, cada lado virado para fora.
+  // Em pé, 2 jogadores ficam um em cada ponta (o de cima virado) e 3 ou mais nos dois lados compridos.
   // A numeração segue o sentido horário a partir do canto de cima à esquerda.
   function lpArrangement(n) {
     if (!LP().facing) return { mode: 'flat', key: 'flat' + n };
     const land = window.innerWidth > window.innerHeight * 1.1;
-    const lr = land ? n === 2 : n >= 3;
+    const lr = land || n >= 3;
     const A = Math.ceil(n / 2), R = n - A, idx = [...Array(n).keys()];
     let a, b;
     if (lr) { a = [0, ...idx.slice(R + 1).reverse()]; b = idx.slice(1, R + 1); } // esquerda e direita, de cima para baixo
@@ -2459,9 +2460,33 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       // painel alto e estreito: + em cima e − embaixo, para o número ter espaço
       c.classList.toggle('tall', h > w * 1.15);
     });
-    // a etiqueta do jogador fica na borda do lado dele; se encostar no botão central, passa para o outro canto
     const hub = grid.querySelector('.lp-hub');
     if (!hub) return;
+    // o botão central fica no meio; se cobrir algum − ou +, vai para o vão livre entre botões mais perto
+    // do meio e, se nenhum couber, fica um pouco menor
+    const near = (a, b, pad) => a.right > b.left - pad && a.left < b.right + pad && a.bottom > b.top - pad && a.top < b.bottom + pad;
+    const pms = [...grid.querySelectorAll('.pm')].map(pm => pm.getBoundingClientRect());
+    const gr = grid.getBoundingClientRect(), mid = gr.height / 2;
+    const fits = (y, pad) => { hub.style.top = y + 'px'; const hr = hub.getBoundingClientRect(); return !pms.some(r => near(r, hr, pad)); };
+    let placed = false;
+    for (const small of [false, true]) {
+      hub.classList.toggle('small', small);
+      const pad = small ? 5 : 7;
+      if (fits(mid, pad)) { placed = true; break; }
+      // faixas de altura ocupadas pelos botões que ficam na mesma linha vertical do botão central
+      const hr = hub.getBoundingClientRect();
+      const busy = pms.filter(r => r.right > hr.left - pad && r.left < hr.right + pad)
+        .map(r => [r.top - gr.top - pad, r.bottom - gr.top + pad]).sort((a, b) => a[0] - b[0]);
+      const gaps = [];
+      let at = 0;
+      for (const [a, b] of busy) { if (a > at) gaps.push((at + a) / 2); at = Math.max(at, b); }
+      if (at < gr.height) gaps.push((at + gr.height) / 2);
+      gaps.sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid));
+      for (const y of gaps) if (fits(y, pad)) { placed = true; break; }
+      if (placed) break;
+    }
+    if (!placed) { hub.classList.remove('small'); hub.style.top = ''; }
+    // a etiqueta do jogador fica na borda do lado dele; se encostar no botão central, passa para o outro canto
     const hr = hub.getBoundingClientRect(), pad = 10;
     cards.forEach(c => {
       c.classList.remove('who-alt');
