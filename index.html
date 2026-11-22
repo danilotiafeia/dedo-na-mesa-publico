@@ -420,57 +420,119 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .presets.lp-presets{grid-template-columns:repeat(5,1fr);gap:.45rem}
 .lp-presets .preset{padding:.85rem .1rem .65rem}
 .lp-presets .preset small{font-size:.7rem}
+/* Mesa de vidas: os painéis viram para os dois lados da mesa; botão central com o logo abre o menu */
 #screen-lpboard{
-  display:flex;flex-direction:column;gap:.6rem;overflow:hidden;touch-action:manipulation;
-  padding:calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 12px)
+  overflow:hidden;touch-action:manipulation;
+  background:radial-gradient(110% 70% at 50% 50%,#2a2d33 0%,var(--felt) 58%,#0e0f11 100%);
+  padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 10px) calc(env(safe-area-inset-bottom) + 10px) calc(env(safe-area-inset-left) + 10px)
 }
-.lp-top{display:flex;align-items:center;gap:.6rem;flex:none}
-.lp-info{flex:1;min-width:0;text-align:center;font-weight:800;font-size:.9rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lp-grid{flex:1;min-height:0;display:grid;gap:.6rem}
+.lp-grid{position:relative;height:100%;display:grid;gap:10px}
+.lp-grid.lr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lp-grid.tb{grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+.lp-side{display:flex;gap:10px;min-width:0;min-height:0}
+.lp-grid.lr .lp-side{flex-direction:column}
+.lp-side > .lp-card{flex:1 1 0}
 .lp-card{
-  --pc:#e8433a;--pc-ink:#14100a;
-  position:relative;min-height:0;min-width:0;border-radius:1.1rem;overflow:hidden;container-type:size;
-  display:grid;grid-template-columns:1fr 1fr;color:var(--pc-ink);
-  background:radial-gradient(120% 110% at 50% 35%,color-mix(in srgb,var(--pc) 88%,#fff) 0%,var(--pc) 50%,color-mix(in srgb,var(--pc) 70%,#000) 100%);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.22),0 4px 14px rgba(0,0,0,.35)
+  --pc:#e8433a;--pc-ink:#14100a;--pc-lite:color-mix(in srgb,var(--pc) 55%,#fff);--pc-deep:color-mix(in srgb,var(--pc) 50%,#000);
+  position:relative;min-height:0;min-width:0;border-radius:1.25rem;overflow:hidden;
+  background:radial-gradient(85% 75% at 50% 45%,color-mix(in srgb,var(--pc) 46%,#1b1d21) 0%,color-mix(in srgb,var(--pc) 24%,#15161a) 62%,color-mix(in srgb,var(--pc) 13%,#0e0f11) 100%);
+  border:2px solid color-mix(in srgb,var(--pc) 72%,transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 50px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.45);
+  transition:filter .35s
 }
+.lp-face{
+  position:absolute;left:50%;top:50%;width:100%;height:100%;container-type:size;
+  transform:translate(-50%,-50%) rotate(var(--rot,0deg));
+  display:grid;grid-template-columns:1fr 1fr;color:var(--ink)
+}
+.lp-heart{
+  position:absolute;left:50%;top:52%;width:9rem;height:9rem;width:min(80cqh,74cqw);height:min(80cqh,74cqw);
+  transform:translate(-50%,-50%);pointer-events:none;overflow:visible
+}
+.lp-heart path{fill:color-mix(in srgb,var(--pc) 30%,transparent);stroke:color-mix(in srgb,var(--pc) 75%,transparent);stroke-width:.55;stroke-linejoin:round}
+.lp-flash{position:absolute;inset:0;pointer-events:none;opacity:0}
+.lp-face.hit .lp-flash{background:radial-gradient(60% 60% at 50% 50%,rgba(255,90,70,.38),transparent 75%);animation:lpflash .45s ease-out}
+.lp-face.beat .lp-flash{background:radial-gradient(60% 60% at 50% 50%,rgba(150,240,165,.28),transparent 75%);animation:lpflash .45s ease-out}
+.lp-face.hit .lp-heart{animation:lphit .4s ease-out}
+.lp-face.beat .lp-heart{animation:lpbeat .4s ease-out}
+@keyframes lpflash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes lpbeat{0%,100%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.13)}}
+@keyframes lphit{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-50%,-50%) scale(.9) rotate(-7deg)}60%{transform:translate(-50%,-50%) scale(.97) rotate(4deg)}}
+.lp-who{
+  position:absolute;bottom:.6rem;left:.65rem;display:flex;align-items:center;gap:.3rem;padding:.22rem .6rem .22rem .4rem;border-radius:999px;
+  background:rgba(0,0,0,.32);color:var(--pc-lite);font-weight:800;font-size:.78rem;letter-spacing:.04em;line-height:1;pointer-events:none
+}
+.lp-who svg{width:.95rem;height:.95rem;flex:none}
+.lp-card.who-alt .lp-who{left:auto;right:.65rem}
 .lp-btn{
-  font:inherit;color:inherit;background:transparent;border:0;margin:0;cursor:pointer;display:flex;align-items:center;
+  font:inherit;color:inherit;background:transparent;border:0;margin:0;padding:0;cursor:pointer;display:flex;align-items:center;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .12s
 }
-.lp-btn:active{background:rgba(0,0,0,.14)}
-.lp-btn:focus-visible{outline:3px solid var(--pc-ink);outline-offset:-5px}
-.lp-dec{justify-content:flex-start;padding:0 0 0 .6rem;padding-left:min(5cqw,1.3rem)}
-.lp-inc{justify-content:flex-end;padding:0 .6rem 0 0;padding-right:min(5cqw,1.3rem)}
+.lp-btn:active{background:rgba(255,255,255,.05)}
+.lp-btn:focus-visible{outline:3px solid var(--pc-lite);outline-offset:-5px}
+.lp-dec{justify-content:flex-start;padding-left:.7rem;padding-left:min(5cqw,1.3rem)}
+.lp-inc{justify-content:flex-end;padding-right:.7rem;padding-right:min(5cqw,1.3rem)}
 .lp-btn .pm{
-  width:2.6rem;height:2.6rem;width:clamp(2.3rem,22cqh,3.6rem);height:clamp(2.3rem,22cqh,3.6rem);
-  border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.14);flex:none
+  width:2.8rem;height:2.8rem;width:clamp(2.4rem,24cqh,3.8rem);height:clamp(2.4rem,24cqh,3.8rem);
+  border-radius:50%;display:grid;place-items:center;flex:none;color:var(--pc-ink);
+  background:radial-gradient(circle at 35% 30%,var(--pc-lite),var(--pc) 62%);
+  box-shadow:0 4px 0 var(--pc-deep),0 7px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .08s,box-shadow .08s
 }
-.lp-btn .pm svg{width:55%;height:55%;opacity:.85}
+.lp-btn:active .pm{transform:translateY(3px);box-shadow:0 1px 0 var(--pc-deep),0 3px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.lp-btn .pm svg{width:52%;height:52%}
 .lp-num{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
-  font-family:var(--font-display);font-size:4.5rem;font-size:min(46cqh,38cqw);line-height:1;white-space:nowrap;
-  font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.12)
+  font-family:var(--font-display);font-size:4.5rem;font-size:min(48cqh,38cqw);line-height:1;white-space:nowrap;color:#fbfdfd;
+  font-variant-numeric:tabular-nums;text-shadow:0 3px 0 var(--pc-deep),0 10px 28px rgba(0,0,0,.5);transition:color .3s
 }
 .lp-card.long .lp-num{font-size:3.4rem;font-size:min(40cqh,26cqw)}
+/* sem vida: o painel perde a cor e o número fica vermelho */
+.lp-card.out{filter:saturate(.2) brightness(.8)}
+.lp-card.out .lp-num{color:#ff8a7a}
 /* painel alto e estreito: + em cima, − embaixo */
-.lp-card.tall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+.lp-card.tall .lp-face{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
 .lp-card.tall .lp-inc{order:-1;justify-content:center;align-items:flex-start;padding:.8rem 0 0;padding-top:min(5cqh,1.1rem)}
 .lp-card.tall .lp-dec{justify-content:center;align-items:flex-end;padding:0 0 .8rem;padding-bottom:min(5cqh,1.1rem)}
 .lp-card.tall .pm{width:clamp(2.2rem,24cqw,3.4rem);height:clamp(2.2rem,24cqw,3.4rem)}
 .lp-card.tall .lp-num{font-size:min(36cqh,48cqw)}
 .lp-card.tall.long .lp-num{font-size:min(30cqh,31cqw)}
-.lp-who{position:absolute;top:.55rem;left:.75rem;font-weight:800;font-size:.8rem;letter-spacing:.04em;opacity:.72;pointer-events:none}
+.lp-card.tall .lp-heart{width:min(58cqh,86cqw);height:min(58cqh,86cqw)}
+.lp-card.tall .lp-who svg{display:none}
+.lp-card.tall .lp-who{padding:.22rem .5rem}
 .lp-delta{
   position:absolute;left:86%;bottom:78%;font-size:.32em;font-size:max(.32em,1.1rem);line-height:1;padding:.14em .38em .1em;border-radius:999px;
-  background:rgba(17,18,21,.85);color:var(--ink);text-shadow:none;white-space:nowrap;opacity:0;transition:opacity .3s
+  background:rgba(17,18,21,.88);color:var(--ink);text-shadow:none;white-space:nowrap;opacity:0;transition:opacity .3s;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--pc) 60%,transparent)
 }
 .lp-delta.on{opacity:1}
 .lp-delta.up{color:#8fe39b}
 .lp-delta.down{color:#ff9b8f}
 .lp-delta.bump{animation:lpbump .22s ease-out}
 @keyframes lpbump{0%{transform:scale(1.35)}100%{transform:scale(1)}}
-@media (prefers-reduced-motion: reduce){ .lp-delta.bump{animation:none} }
+.lp-hub{
+  position:absolute;left:50%;top:50%;z-index:2;width:3.5rem;height:3.5rem;margin:-1.75rem 0 0 -1.75rem;border-radius:50%;border:0;padding:0;
+  cursor:pointer;background:#17181c;display:grid;place-items:center;transition:transform .12s;
+  box-shadow:0 0 0 6px #17181c,0 0 0 7.5px rgba(240,246,246,.18),0 10px 24px rgba(0,0,0,.6)
+}
+.lp-hub .logo{width:82%;height:82%;border-radius:32%}
+.lp-hub:active{transform:scale(.93)}
+.lp-menu-back{position:fixed;inset:0;z-index:12;background:rgba(6,7,9,.72);display:grid;place-items:center;padding:1.25rem}
+.lp-menu{
+  width:100%;max-width:22rem;background:var(--panel);border:1px solid var(--line);border-radius:1.25rem;padding:1.1rem;
+  display:grid;gap:1rem;box-shadow:0 20px 50px rgba(0,0,0,.6)
+}
+.lp-menu-head{display:flex;align-items:center;gap:.75rem}
+.lp-menu-head .logo{width:2.75rem;height:2.75rem;border-radius:.85rem;flex:none}
+.lp-menu-head h2{font-family:var(--font-display);font-weight:400;font-size:1.5rem;margin:0;line-height:1.1}
+.lp-menu-head small{display:block;color:var(--muted);font-weight:700;font-size:.85rem;margin-top:.1rem}
+.lp-menu .label{margin-bottom:.5rem}
+.lp-menu .seg{display:flex;width:100%}
+.lp-menu .seg button{flex:1;justify-content:center;padding:0 .4rem;font-size:.88rem}
+.lp-menu-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.lp-menu-row .ghost-btn{justify-content:center}
+@media (prefers-reduced-motion: reduce){
+  .lp-delta.bump,.lp-face.hit .lp-heart,.lp-face.beat .lp-heart,.lp-face.hit .lp-flash,.lp-face.beat .lp-flash{animation:none}
+}
 
 [hidden]{display:none !important}
 
@@ -785,13 +847,28 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 
 <!-- LP: mesa com a vida de cada jogador -->
 <section class="screen" id="screen-lpboard" hidden aria-label="Pontos de vida">
-  <div class="lp-top">
-    <button class="ghost-btn" id="lp-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Ajustar</button>
-    <span class="lp-info" id="lp-info">20 LP</span>
-    <button class="ghost-btn" id="lp-reset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span id="lp-reset-label">Reiniciar</span></button>
-  </div>
   <div class="lp-grid" id="lp-grid"></div>
 </section>
+<div class="lp-menu-back" id="lp-menu" hidden>
+  <div class="lp-menu" role="dialog" aria-modal="true" aria-labelledby="lp-menu-title">
+    <div class="lp-menu-head">
+      <span class="logo" aria-hidden="true"></span>
+      <div><h2 id="lp-menu-title">LP</h2><small id="lp-info">20 de vida</small></div>
+    </div>
+    <section>
+      <h3 class="label">Posição dos painéis</h3>
+      <div class="pill-group seg" id="lp-facing" role="group" aria-label="Posição dos painéis">
+        <button type="button" data-facing="1" aria-pressed="true">Frente a frente</button>
+        <button type="button" data-facing="0" aria-pressed="false">Todos de um lado</button>
+      </div>
+    </section>
+    <div class="lp-menu-row">
+      <button class="ghost-btn" id="lp-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Ajustar</button>
+      <button class="ghost-btn" id="lp-reset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span id="lp-reset-label">Reiniciar</span></button>
+    </div>
+    <button class="primary wide" id="lp-menu-close" type="button">Voltar ao jogo</button>
+  </div>
+</div>
 
 <div class="color-pop" id="color-pop" hidden></div>
 
@@ -1003,7 +1080,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, timerMode: 'hourglass', bombMin: 15, bombMax: 60, score: defaultScore(), dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] }, lp: { players: 2, start: 20, game: null } };
+  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, timerMode: 'hourglass', bombMin: 15, bombMax: 60, score: defaultScore(), dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] }, lp: { players: 2, start: 20, facing: true, game: null } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -1068,6 +1145,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       const okLife = v => Number.isInteger(v) && v >= LP_MIN && v <= LP_MAX;
       if (Number.isInteger(lp.players)) settings.lp.players = clamp(lp.players, ...LP_PLAYERS);
       if (Number.isInteger(lp.start) && lp.start >= 1 && lp.start <= LP_MAX) settings.lp.start = lp.start;
+      if (typeof lp.facing === 'boolean') settings.lp.facing = lp.facing;
       const g = lp.game;
       if (g && Array.isArray(g.lives) && g.lives.length >= LP_PLAYERS[0] && g.lives.length <= LP_PLAYERS[1] && g.lives.every(okLife) && Number.isInteger(g.start) && g.start >= 1 && g.start <= LP_MAX) {
         settings.lp.game = { start: g.start, lives: g.lives.slice() };
@@ -2294,8 +2372,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   }
 
   // ---------- LP: pontos de vida ----------
-  // Cada jogador tem um painel na sua cor: metade esquerda diminui, metade direita aumenta.
-  // A diferença acumulada aparece no canto do número e some 2 s depois do último toque.
+  // Cada jogador tem um painel na sua cor, virado para o seu lado da mesa: metade do − diminui,
+  // metade do + aumenta. A diferença acumulada aparece no canto do número e some 2 s depois do último toque.
   const LP = () => settings.lp;
   const LP_DELTA_MS = 2000;
   const lpDeltas = []; // { sum, timer } por jogador
@@ -2344,37 +2422,84 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     go('lpboard');
   }
 
-  // colunas e linhas conforme o número de jogadores e a posição do celular
-  function lpLayout() {
-    const g = LP().game;
-    if (!g) return;
-    const n = g.lives.length, land = window.innerWidth > window.innerHeight * 1.1;
-    const cols = land ? (n <= 3 ? n : n === 4 ? 2 : 3) : (n <= 3 ? 1 : 2);
-    const rows = Math.ceil(n / cols), grid = $('lp-grid');
-    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-    grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
-    const spare = rows * cols - n; // o último painel ocupa o espaço que sobra na linha
-    const cards = [...grid.querySelectorAll('.lp-card')];
-    cards.forEach((c, i) => { c.style.gridColumn = i === n - 1 && spare ? `span ${spare + 1}` : ''; });
-    // painéis estreitos empilham + e − para o número ter espaço
-    cards.forEach(c => { const r = c.getBoundingClientRect(); c.classList.toggle('tall', r.height > r.width * 1.15); });
+  // Frente a frente: com 2 jogadores, um em cada ponta do celular (o de cima virado);
+  // com 3 ou mais, metade em cada lado comprido, cada coluna virada para o seu lado.
+  // A numeração segue o sentido horário a partir do canto de cima à esquerda.
+  function lpArrangement(n) {
+    if (!LP().facing) return { mode: 'flat', key: 'flat' + n };
+    const land = window.innerWidth > window.innerHeight * 1.1;
+    const lr = land ? n === 2 : n >= 3;
+    const A = Math.ceil(n / 2), R = n - A, idx = [...Array(n).keys()];
+    let a, b;
+    if (lr) { a = [0, ...idx.slice(R + 1).reverse()]; b = idx.slice(1, R + 1); } // esquerda e direita, de cima para baixo
+    else { a = idx.slice(0, A); b = idx.slice(A).reverse(); }                   // em cima e embaixo, da esquerda para a direita
+    const mode = lr ? 'lr' : 'tb';
+    return { mode, key: mode + n, sides: [{ list: a, rot: lr ? 90 : 180 }, { list: b, rot: lr ? -90 : 0 }] };
   }
 
-  function renderLpBoard() {
-    const g = LP().game;
-    lpClearDeltas();
-    $('lp-info').textContent = `${g.start} de vida`;
-    lpResetConfirm(false);
-    $('lp-grid').innerHTML = g.lives.map((v, i) => {
-      const c = lpColor(i), who = `Jogador ${i + 1}`;
-      return `<div class="lp-card${String(lpFmt(v)).length > 2 ? ' long' : ''}" data-i="${i}" role="group" aria-label="${who}" style="--pc:${c};--pc-ink:${readableOn(c)}">
-        <span class="lp-who" aria-hidden="true">J${i + 1}</span>
+  // tamanho de cada painel (girado ou não) e, na opção Todos de um lado, colunas e linhas da grade
+  function lpLayout() {
+    const g = LP().game, grid = $('lp-grid');
+    if (!g) return;
+    const n = g.lives.length, cards = [...grid.querySelectorAll('.lp-card')];
+    if (grid.classList.contains('flat')) {
+      const land = window.innerWidth > window.innerHeight * 1.1;
+      const cols = land ? (n <= 3 ? n : n === 4 ? 2 : 3) : (n <= 3 ? 1 : 2);
+      const rows = Math.ceil(n / cols), spare = rows * cols - n; // o último painel ocupa o espaço que sobra na linha
+      grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+      cards.forEach((c, k) => { c.style.gridColumn = k === n - 1 && spare ? `span ${spare + 1}` : ''; });
+    }
+    cards.forEach(c => {
+      const face = c.querySelector('.lp-face'), r = c.getBoundingClientRect();
+      const turned = Math.abs(Number(face.dataset.rot)) === 90;
+      const w = Math.max(0, (turned ? r.height : r.width) - 4), h = Math.max(0, (turned ? r.width : r.height) - 4); // 2 px de borda
+      face.style.width = w + 'px';
+      face.style.height = h + 'px';
+      // painel alto e estreito: + em cima e − embaixo, para o número ter espaço
+      c.classList.toggle('tall', h > w * 1.15);
+    });
+    // a etiqueta do jogador fica na borda do lado dele; se encostar no botão central, passa para o outro canto
+    const hub = grid.querySelector('.lp-hub');
+    if (!hub) return;
+    const hr = hub.getBoundingClientRect(), pad = 10;
+    cards.forEach(c => {
+      c.classList.remove('who-alt');
+      const r = c.querySelector('.lp-who').getBoundingClientRect();
+      c.classList.toggle('who-alt', r.right > hr.left - pad && r.left < hr.right + pad && r.bottom > hr.top - pad && r.top < hr.bottom + pad);
+    });
+  }
+
+  const HEART_D = 'M12 21s-8-4.9-9.8-9.9C1 7.4 3.4 3.8 7.1 3.8c2.1 0 3.8 1.2 4.9 3 1.1-1.8 2.8-3 4.9-3 3.7 0 6.1 3.6 4.9 7.3C20 16.1 12 21 12 21z';
+  function lpCardHtml(i, v, rot) {
+    const c = lpColor(i), who = `Jogador ${i + 1}`, text = lpFmt(v);
+    return `<div class="lp-card${text.length > 2 ? ' long' : ''}${v <= 0 ? ' out' : ''}" data-i="${i}" role="group" aria-label="${who}" style="--pc:${c};--pc-ink:${readableOn(c)}">
+      <div class="lp-face" data-rot="${rot}" style="--rot:${rot}deg">
+        <svg class="lp-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART_D}"/></svg>
+        <span class="lp-flash" aria-hidden="true"></span>
+        <span class="lp-who" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#meeple" fill="${c}"/></svg>J${i + 1}</span>
         <button type="button" class="lp-btn lp-dec" data-d="-1" aria-label="Tirar 1 de vida do ${who}"><span class="pm">${PM_SVG('M5 12h14')}</span></button>
         <button type="button" class="lp-btn lp-inc" data-d="1" aria-label="Dar 1 de vida ao ${who}"><span class="pm">${PM_SVG('M5 12h14M12 5v14')}</span></button>
-        <div class="lp-num"><output class="lp-val" aria-live="polite">${lpFmt(v)}</output><span class="lp-delta" aria-hidden="true"></span></div>
-      </div>`;
-    }).join('');
+        <div class="lp-num"><output class="lp-val" aria-live="polite">${text}</output><span class="lp-delta" aria-hidden="true"></span></div>
+      </div>
+    </div>`;
+  }
+
+  let lpKey = '';
+  function renderLpBoard() {
+    const g = LP().game, n = g.lives.length, arr = lpArrangement(n), grid = $('lp-grid');
+    lpClearDeltas();
+    lpResetConfirm(false);
+    lpKey = arr.key;
+    $('lp-info').textContent = `${plural(n, 'jogador', 'jogadores')} · ${g.start} de vida`;
+    grid.className = 'lp-grid ' + arr.mode;
+    grid.style.gridTemplateColumns = grid.style.gridTemplateRows = '';
+    const hub = '<button type="button" class="lp-hub" aria-label="Menu do LP" aria-haspopup="dialog"><span class="logo" aria-hidden="true"></span></button>';
+    grid.innerHTML = (arr.mode === 'flat'
+      ? g.lives.map((v, i) => lpCardHtml(i, v, 0)).join('')
+      : arr.sides.map(sd => `<div class="lp-side">${sd.list.map(i => lpCardHtml(i, g.lives[i], sd.rot)).join('')}</div>`).join('')) + hub;
     lpLayout();
+    syncFacing();
     keepAwake();
   }
 
@@ -2391,6 +2516,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     const text = lpFmt(g.lives[i]);
     card.querySelector('.lp-val').textContent = text;
     card.classList.toggle('long', text.length > 2);
+    card.classList.toggle('out', g.lives[i] <= 0);
+    // o coração pulsa quando ganha vida e treme quando perde
+    const face = card.querySelector('.lp-face');
+    face.classList.remove('beat', 'hit'); void face.offsetWidth; face.classList.add(real > 0 ? 'beat' : 'hit');
     // diferença acumulada enquanto os toques continuam; 2 s sem tocar e ela some
     const st = lpDeltas[i] || (lpDeltas[i] = { sum: 0, timer: null });
     st.sum += real;
@@ -2406,9 +2535,35 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     lpDeltas.length = 0;
   }
   $('lp-grid').addEventListener('click', e => {
+    if (e.target.closest('.lp-hub')) { lpMenuOpen(); return; }
     const b = e.target.closest('.lp-btn');
     if (!b) return;
     lpChange(Number(b.closest('.lp-card').dataset.i), Number(b.dataset.d));
+  });
+
+  // menu do botão central: posição dos painéis, Ajustar e Reiniciar
+  const lpMenu = $('lp-menu');
+  function lpMenuOpen() { lpResetConfirm(false); syncFacing(); lpMenu.hidden = false; $('lp-menu-close').focus(); }
+  function lpMenuClose() {
+    if (lpMenu.hidden) return;
+    lpMenu.hidden = true;
+    lpResetConfirm(false);
+    const hub = $('lp-grid').querySelector('.lp-hub');
+    if (hub) hub.focus({ preventScroll: true });
+  }
+  function syncFacing() {
+    $('lp-facing').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.facing === '1') === LP().facing)));
+  }
+  $('lp-menu-close').addEventListener('click', lpMenuClose);
+  lpMenu.addEventListener('click', e => { if (e.target === lpMenu) lpMenuClose(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lpMenuClose(); });
+  $('lp-facing').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    LP().facing = b.dataset.facing === '1';
+    save();
+    renderLpBoard();
+    lpMenuClose();
   });
 
   // Reiniciar pede um segundo toque, como o Zerar pontos do Placar
@@ -2425,14 +2580,20 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     g.lives = g.lives.map(() => g.start);
     save();
     renderLpBoard();
+    lpMenuClose();
   });
 
   function lpLeave() {
     lpClearDeltas();
     lpResetConfirm(false);
+    lpMenu.hidden = true;
     try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
   }
-  window.addEventListener('resize', () => { if (screen === 'lpboard') lpLayout(); });
+  // girar o celular muda os lados quando necessário
+  window.addEventListener('resize', () => {
+    if (screen !== 'lpboard' || !LP().game) return;
+    if (lpArrangement(LP().game.lives.length).key !== lpKey) renderLpBoard(); else lpLayout();
+  });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && screen === 'lpboard') keepAwake(); });
 
   // ---------- início ----------

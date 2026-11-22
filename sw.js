@@ -1,5 +1,5 @@
 // Sorteador TF: guarda o app no celular para funcionar sem internet.
-const CACHE = 'sorteador-tf-v15';
+const CACHE = 'sorteador-tf-v16';
 const APP_FILES = [
   './',
   './index.html',
