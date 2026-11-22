@@ -447,25 +447,99 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   transform:translate(-50%,-50%) rotate(var(--rot,0deg));
   display:grid;grid-template-columns:1fr 1fr;color:var(--ink)
 }
-.lp-heart{
+/* Marcador de vida (coração, poção, bateria, vela) atrás do número; a barra fica embaixo do número, do lado do jogador */
+.lp-gauge{
   position:absolute;left:50%;top:52%;width:9rem;height:9rem;width:min(80cqh,74cqw);height:min(80cqh,74cqw);
-  transform:translate(-50%,-50%);pointer-events:none;overflow:visible
+  transform:translate(-50%,-50%);pointer-events:none
 }
-.lp-heart path{fill:color-mix(in srgb,var(--pc) 30%,transparent);stroke:color-mix(in srgb,var(--pc) 75%,transparent);stroke-width:.55;stroke-linejoin:round}
+.lp-gauge svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.g-fill{position:absolute;inset:0;transition:clip-path .7s cubic-bezier(.3,.7,.3,1),-webkit-clip-path .7s cubic-bezier(.3,.7,.3,1)}
+.g-heart .g-back path{fill:color-mix(in srgb,var(--pc) 9%,transparent)}
+.g-heart .g-fill path{fill:color-mix(in srgb,var(--pc) 58%,transparent)}
+.g-heart .g-front path{fill:none;stroke:color-mix(in srgb,var(--pc) 80%,transparent);stroke-width:.55;stroke-linejoin:round}
+.g-potion{width:min(96cqh,80cqw);height:min(96cqh,80cqw)}
+.lp-card.tall .g-potion{width:min(66cqh,94cqw);height:min(66cqh,94cqw)}
+.g-potion > svg,.g-potion > .g-fill{top:-14%;bottom:14%;height:auto}
+.g-potion .glass{fill:rgba(240,246,246,.07)}
+.g-potion .cork{fill:#b98552;opacity:.8}
+.g-potion .liquid{fill:#e0392e;fill-opacity:.88}
+.g-potion .liquid-hi{fill:none;stroke:#ff8f80;stroke-width:3;stroke-linecap:round;opacity:.6}
+.g-potion .bub{fill:#ffd7d0;opacity:0;animation:lpbub 2.6s ease-in infinite}
+.g-potion .bub.b2{animation-delay:.9s}
+.g-potion .bub.b3{animation-delay:1.7s}
+.g-potion .outline{fill:none;stroke:color-mix(in srgb,var(--pc) 70%,#fff);stroke-width:2.6;stroke-linejoin:round}
+.g-potion .shine{fill:none;stroke:rgba(255,255,255,.35);stroke-width:3;stroke-linecap:round}
+@keyframes lpbub{0%{transform:translateY(0);opacity:0}15%{opacity:.85}100%{transform:translateY(-30px);opacity:0}}
+.g-battery{width:min(80cqh,60cqw);height:min(80cqh,60cqw)}
+.lp-card.tall .g-battery{width:min(58cqh,86cqw);height:min(58cqh,86cqw)}
+.g-battery .body{fill:rgba(0,0,0,.22);stroke:color-mix(in srgb,var(--pc) 70%,#fff);stroke-width:3}
+.g-battery .term{fill:color-mix(in srgb,var(--pc) 70%,#fff)}
+.g-battery .seg{fill:rgba(255,255,255,.07);transition:fill .3s}
+.g-battery .seg.on{fill:#5bd16b;fill-opacity:.85}
+.lp-card.mid .g-battery .seg.on{fill:#f5c330}
+.lp-card.low .g-battery .seg.on{fill:#ff5a4a;animation:lpblink .8s steps(2,end) infinite}
+.g-battery .bolt{fill:#f5c330;stroke:#14100a;stroke-width:2;stroke-linejoin:round;opacity:0;transition:opacity .3s}
+.lp-card.over .g-battery .bolt{opacity:1}
+.g-candle{--h:70%;width:min(88cqh,68cqw);height:min(88cqh,68cqw)}
+.lp-card.tall .g-candle{width:min(64cqh,94cqw);height:min(64cqh,94cqw)}
+.g-candle span{position:absolute;left:50%;display:block}
+.g-candle .c-glow{bottom:calc(3% + var(--h));width:76%;height:56%;margin-left:-38%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,190,90,.24),transparent);transition:bottom .7s cubic-bezier(.3,.7,.3,1),opacity .3s}
+.g-candle .c-plate{bottom:4%;width:66%;height:8%;margin-left:-33%;border-radius:50%;background:color-mix(in srgb,var(--pc) 65%,#111);box-shadow:inset 0 2px 0 rgba(255,255,255,.22)}
+.g-candle .c-body{
+  bottom:8%;width:44%;height:var(--h);margin-left:-22%;border-radius:10px 10px 4px 4px;opacity:.9;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 28%,#c9b896),color-mix(in srgb,var(--pc) 12%,#fff6e2) 45%,color-mix(in srgb,var(--pc) 32%,#b8a582));
+  transition:height .7s cubic-bezier(.3,.7,.3,1)
+}
+.g-candle .c-wick{bottom:calc(8% + var(--h));width:1.8%;height:5%;margin-left:-.9%;border-radius:2px;background:#2a211a;transition:bottom .7s cubic-bezier(.3,.7,.3,1)}
+.g-candle .c-flame{
+  bottom:calc(11% + var(--h));width:13%;height:20%;margin-left:-6.5%;border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+  background:radial-gradient(circle at 50% 72%,#fffbe0 0 22%,#ffd34d 42%,#ff8a1f 72%,rgba(255,80,20,0) 100%);
+  transform-origin:50% 90%;animation:lpflicker 1.6s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,170,60,.8));
+  transition:bottom .7s cubic-bezier(.3,.7,.3,1),opacity .3s
+}
+.g-candle .c-body::before{content:"";position:absolute;left:8%;right:8%;top:0;height:9%;min-height:4px;border-radius:50%;background:rgba(255,255,255,.35)}
+.g-candle .c-body::after{content:"";position:absolute;left:18%;top:2%;width:13%;height:min(34%,3.2rem);border-radius:0 0 999px 999px;background:color-mix(in srgb,var(--pc) 20%,#fff3da);opacity:.85}
+@keyframes lpflicker{0%,100%{transform:scale(1) rotate(-2deg)}25%{transform:scale(1.07,.93) rotate(2deg)}50%{transform:scale(.94,1.08) rotate(-1deg)}75%{transform:scale(1.03,.97) rotate(1.5deg)}}
+.lp-card.low .g-candle .c-flame{width:10%;margin-left:-5%;height:15%}
+.lp-card.out .g-candle .c-flame,.lp-card.out .g-candle .c-glow{opacity:0}
+.lp-card.over .lp-gauge{filter:drop-shadow(0 0 10px rgba(245,195,48,.55))}
+/* barra de jogo de luta: amarela, laranja na metade, vermelha piscando no fim; o rastro claro some depois do golpe */
+.g-bar{
+  position:absolute;left:50%;top:calc(100% + max(.7rem,7cqh));width:12rem;width:74cqw;height:1rem;height:clamp(10px,8cqh,22px);
+  transform:translateX(-50%) skewX(-14deg);border:2px solid rgba(10,10,12,.9);border-radius:3px;background:rgba(0,0,0,.55);overflow:hidden;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--pc) 70%,transparent),0 4px 10px rgba(0,0,0,.45);text-shadow:none
+}
+.g-bar span{position:absolute;left:0;top:0;bottom:0;display:block}
+.g-bar .b-trail{width:100%;background:#fff1d0;transition:width .7s ease .45s}
+.g-bar .b-main{width:100%;background:linear-gradient(#ffe98a,#f5c330 55%,#d99a12);transition:width .18s ease-out}
+.lp-card.mid .g-bar .b-main{background:linear-gradient(#ffc27a,#f08a24 55%,#c4630f)}
+.lp-card.low .g-bar .b-main{background:linear-gradient(#ff8f80,#e8433a 55%,#a8231a);animation:lpblink .8s steps(2,end) infinite}
+.g-bar .b-shine{left:0;right:0;height:38%;background:rgba(255,255,255,.28)}
+.lp-card.over .g-bar{box-shadow:0 0 0 2px #f5c330,0 0 14px rgba(245,195,48,.65)}
+@keyframes lpblink{50%{opacity:.4}}
 .lp-flash{position:absolute;inset:0;pointer-events:none;opacity:0}
 .lp-face.hit .lp-flash{background:radial-gradient(60% 60% at 50% 50%,rgba(255,90,70,.38),transparent 75%);animation:lpflash .45s ease-out}
 .lp-face.beat .lp-flash{background:radial-gradient(60% 60% at 50% 50%,rgba(150,240,165,.28),transparent 75%);animation:lpflash .45s ease-out}
-.lp-face.hit .lp-heart{animation:lphit .4s ease-out}
-.lp-face.beat .lp-heart{animation:lpbeat .4s ease-out}
+.lp-face.hit .lp-gauge{animation:lphit .4s ease-out}
+.lp-face.beat .lp-gauge{animation:lpbeat .4s ease-out}
+.lp-face.hit .g-bar{animation:lpbarhit .3s ease-out}
+.lp-card.low .g-heart{animation:lpheartbeat 1.1s ease-in-out infinite}
 @keyframes lpflash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
 @keyframes lpbeat{0%,100%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.13)}}
 @keyframes lphit{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-50%,-50%) scale(.9) rotate(-7deg)}60%{transform:translate(-50%,-50%) scale(.97) rotate(4deg)}}
+@keyframes lpbarhit{0%,100%{transform:translateX(-50%) skewX(-14deg)}30%{transform:translateX(calc(-50% - 5px)) skewX(-14deg)}65%{transform:translateX(calc(-50% + 4px)) skewX(-14deg)}}
+@keyframes lpheartbeat{0%,100%{transform:translate(-50%,-50%) scale(1)}14%{transform:translate(-50%,-50%) scale(1.08)}28%{transform:translate(-50%,-50%) scale(.98)}42%{transform:translate(-50%,-50%) scale(1.05)}}
+/* seletor do marcador na configuração */
+.lp-gauges{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.45rem}
+.lp-gauges .chip{min-width:0;padding:.55rem .1rem .45rem;font-size:.78rem}
+.lp-gauges .chip svg{width:2.3rem;height:2.3rem}
 .lp-who{
   position:absolute;bottom:.6rem;left:.65rem;display:flex;align-items:center;gap:.3rem;padding:.22rem .6rem .22rem .4rem;border-radius:999px;
   background:rgba(0,0,0,.32);color:var(--pc-lite);font-weight:800;font-size:.78rem;letter-spacing:.04em;line-height:1;pointer-events:none
 }
 .lp-who svg{width:.95rem;height:.95rem;flex:none}
 .lp-card.who-alt .lp-who{left:auto;right:.65rem}
+.lp-card[data-gauge="barra"] .lp-who{bottom:auto;top:.6rem}
 .lp-btn{
   font:inherit;color:inherit;background:transparent;border:0;margin:0;padding:0;cursor:pointer;display:flex;align-items:center;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .12s
@@ -498,9 +572,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .lp-card.tall .pm{width:clamp(2.2rem,24cqw,3.4rem);height:clamp(2.2rem,24cqw,3.4rem)}
 .lp-card.tall .lp-num{font-size:min(36cqh,48cqw)}
 .lp-card.tall.long .lp-num{font-size:min(30cqh,31cqw)}
-.lp-card.tall .lp-heart{width:min(58cqh,86cqw);height:min(58cqh,86cqw)}
+.lp-card.tall .lp-gauge{width:min(58cqh,86cqw);height:min(58cqh,86cqw)}
 .lp-card.tall .lp-who svg{display:none}
-.lp-card.tall .lp-who{padding:.22rem .5rem}
+.lp-card.tall .lp-who{padding:.2rem .4rem;left:.4rem;font-size:.72rem}
+.lp-card.tall.who-alt .lp-who{left:auto;right:.4rem}
 .lp-delta{
   position:absolute;left:86%;bottom:78%;font-size:.32em;font-size:max(.32em,1.1rem);line-height:1;padding:.14em .38em .1em;border-radius:999px;
   background:rgba(17,18,21,.88);color:var(--ink);text-shadow:none;white-space:nowrap;opacity:0;transition:opacity .3s;
@@ -534,7 +609,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .lp-menu-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 .lp-menu-row .ghost-btn{justify-content:center}
 @media (prefers-reduced-motion: reduce){
-  .lp-delta.bump,.lp-face.hit .lp-heart,.lp-face.beat .lp-heart,.lp-face.hit .lp-flash,.lp-face.beat .lp-flash{animation:none}
+  .lp-delta.bump,.lp-face.hit .lp-gauge,.lp-face.beat .lp-gauge,.lp-face.hit .lp-flash,.lp-face.beat .lp-flash,.lp-face.hit .g-bar,
+  .lp-card.low .g-heart,.g-potion .bub,.g-candle .c-flame,.lp-card.low .g-bar .b-main,.lp-card.low .g-battery .seg.on{animation:none}
 }
 
 [hidden]{display:none !important}
@@ -837,6 +913,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       </div>
     </section>
     <section>
+      <h3 class="label">Marcador de vida</h3>
+      <div class="chips lp-gauges" id="lp-gauges" role="group" aria-label="Marcador de vida"></div>
+    </section>
+    <section>
       <h3 class="label">Vida inicial</h3>
       <div class="presets lp-presets" id="lp-presets"></div>
     </section>
@@ -910,6 +990,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const MAX_PLAYERS = 6, MAX_QTY = 10;
   const BOMB_LIMIT = 3600; // segundos
   const LP_PRESETS = [10, 20, 25, 30, 40], LP_PLAYERS = [2, 6], LP_MIN = -999, LP_MAX = 9999;
+  const LP_GAUGES = [{ id: 'coracao', name: 'Coração' }, { id: 'pocao', name: 'Poção' }, { id: 'barra', name: 'Barra' }, { id: 'bateria', name: 'Bateria' }, { id: 'vela', name: 'Vela' }];
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MEEPLE_D = document.getElementById('meeple').getAttribute('d');
 
@@ -1120,7 +1201,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const modeBtns = [...document.querySelectorAll('.controls .seg button')];
   const fontBtns = [...document.querySelectorAll('#font-seg button')];
 
-  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, timerMode: 'hourglass', bombMin: 15, bombMax: 60, score: defaultScore(), dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] }, lp: { players: 2, start: 20, facing: true, game: null } };
+  const settings = { v: 2, mode: 'winner', winners: 1, teams: 2, seconds: 10, scale: 1, icon: 'aleatorio', timerSecs: 30, alarm: true, timerMode: 'hourglass', bombMin: 15, bombMax: 60, score: defaultScore(), dice: { faces: 6, players: [{ color: '#e8433a', qty: 1 }] }, lp: { players: 2, start: 20, facing: true, gauge: 'coracao', game: null } };
 
   let W = 0, H = 0, DPR = 1, felt = null, vignette = null;
   let phase = 'idle'; // idle | counting | result
@@ -1186,6 +1267,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       if (Number.isInteger(lp.players)) settings.lp.players = clamp(lp.players, ...LP_PLAYERS);
       if (Number.isInteger(lp.start) && lp.start >= 1 && lp.start <= LP_MAX) settings.lp.start = lp.start;
       if (typeof lp.facing === 'boolean') settings.lp.facing = lp.facing;
+      if (LP_GAUGES.some(gg => gg.id === lp.gauge)) settings.lp.gauge = lp.gauge;
       const g = lp.game;
       if (g && Array.isArray(g.lives) && g.lives.length >= LP_PLAYERS[0] && g.lives.length <= LP_PLAYERS[1] && g.lives.every(okLife) && Number.isInteger(g.start) && g.start >= 1 && g.start <= LP_MAX) {
         settings.lp.game = { start: g.start, lives: g.lives.slice() };
@@ -2421,6 +2503,32 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
   const lpFmt = v => (v < 0 ? '−' + Math.abs(v) : String(v));
   const PM_SVG = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="${d}"/></svg>`;
 
+  // marcador de vida: prévia em miniatura de cada opção
+  const HEART_D = 'M12 21s-8-4.9-9.8-9.9C1 7.4 3.4 3.8 7.1 3.8c2.1 0 3.8 1.2 4.9 3 1.1-1.8 2.8-3 4.9-3 3.7 0 6.1 3.6 4.9 7.3C20 16.1 12 21 12 21z';
+  const FLASK_D = 'M41 12 H59 V22 H56 V37 C71 43 82 55 82 69 C82 85 68 95 50 95 C32 95 18 85 18 69 C18 55 29 43 44 37 V22 H41 Z';
+  const LP_GAUGE_PREVIEW = {
+    coracao: `<svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="lpv-h"><rect x="0" y="10.5" width="24" height="14"/></clipPath></defs>
+      <path d="${HEART_D}" fill="#d11f1d" clip-path="url(#lpv-h)"/><path d="${HEART_D}" fill="none" stroke="#f0f6f6" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+    pocao: `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="lpv-p"><rect x="0" y="60" width="100" height="40"/></clipPath></defs>
+      <path d="${FLASK_D}" fill="#e0392e" clip-path="url(#lpv-p)"/><path d="${FLASK_D}" fill="none" stroke="#f0f6f6" stroke-width="6" stroke-linejoin="round"/>
+      <rect x="37" y="3" width="26" height="11" rx="3" fill="#b98552"/></svg>`,
+    barra: `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="translate(13 0) skewX(-14)">
+      <rect x="6" y="37" width="88" height="26" rx="3" fill="#111" stroke="#f0f6f6" stroke-width="5"/>
+      <rect x="11" y="42" width="44" height="16" fill="#f5c330"/><rect x="55" y="42" width="15" height="16" fill="#fff1d0"/></g></svg>`,
+    bateria: `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="7" y="30" width="80" height="42" rx="8" fill="none" stroke="#f0f6f6" stroke-width="6"/>
+      <rect x="88" y="42" width="8" height="18" rx="2.5" fill="#f0f6f6"/>
+      ${[0, 1, 2].map(k => `<rect x="${15 + k * 14.4}" y="38" width="10.4" height="26" rx="2" fill="#5bd16b"/>`).join('')}</svg>`,
+    vela: `<svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="90" rx="27" ry="6" fill="#d11f1d"/>
+      <rect x="37" y="44" width="26" height="46" rx="4" fill="#f3e6c8"/><rect x="48.5" y="36" width="3" height="9" rx="1.5" fill="#2a211a"/>
+      <path d="M50 8 C58 20 61 27 58 33 C56 37 44 37 42 33 C39 27 42 20 50 8 Z" fill="#ff9a2a"/><path d="M50 20 C54 26 55 29 53 32 C52 34 48 34 47 32 C45 29 46 26 50 20 Z" fill="#fff0a8"/></svg>`
+  };
+  $('lp-gauges').innerHTML = LP_GAUGES.map(gg => `<button type="button" class="chip" data-gauge="${gg.id}" aria-pressed="false">${LP_GAUGE_PREVIEW[gg.id]}<span>${gg.name}</span></button>`).join('');
+  $('lp-gauges').addEventListener('click', e => {
+    const b = e.target.closest('.chip');
+    if (!b) return;
+    LP().gauge = b.dataset.gauge; save(); renderLpSetup();
+  });
+
   $('lp-presets').innerHTML = LP_PRESETS.map(v => `<button type="button" class="preset" data-life="${v}"><b>${v}</b><small>de vida</small></button>`).join('');
   $('lp-presets').addEventListener('click', e => {
     const b = e.target.closest('.preset');
@@ -2446,6 +2554,7 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     $('lpp-dec').disabled = L.players <= lo;
     $('lpp-inc').disabled = L.players >= hi;
     $('lp-presets').querySelectorAll('.preset').forEach(b => b.classList.toggle('is-last', Number(b.dataset.life) === L.start));
+    $('lp-gauges').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gauge === L.gauge)));
     if (!LP_PRESETS.includes(L.start) && !$('lp-custom').value) $('lp-custom').value = L.start;
     $('lp-error').hidden = true;
     const g = L.game, resume = $('lp-resume');
@@ -2501,10 +2610,10 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     });
     const hub = grid.querySelector('.lp-hub');
     if (!hub) return;
-    // o botão central fica no meio; se cobrir algum − ou +, vai para o vão livre entre botões mais perto
+    // o botão central fica no meio; se cobrir algum − ou + (ou a barra de vida), vai para o vão livre mais perto
     // do meio e, se nenhum couber, fica um pouco menor
     const near = (a, b, pad) => a.right > b.left - pad && a.left < b.right + pad && a.bottom > b.top - pad && a.top < b.bottom + pad;
-    const pms = [...grid.querySelectorAll('.pm')].map(pm => pm.getBoundingClientRect());
+    const pms = [...grid.querySelectorAll('.pm, .g-bar')].map(pm => pm.getBoundingClientRect());
     const gr = grid.getBoundingClientRect(), mid = gr.height / 2;
     const fits = (y, pad) => { hub.style.top = y + 'px'; const hr = hub.getBoundingClientRect(); return !pms.some(r => near(r, hr, pad)); };
     let placed = false;
@@ -2534,17 +2643,60 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     });
   }
 
-  const HEART_D = 'M12 21s-8-4.9-9.8-9.9C1 7.4 3.4 3.8 7.1 3.8c2.1 0 3.8 1.2 4.9 3 1.1-1.8 2.8-3 4.9-3 3.7 0 6.1 3.6 4.9 7.3C20 16.1 12 21 12 21z';
-  function lpCardHtml(i, v, rot) {
+  // desenho do marcador escolhido; o nível (vida atual ÷ vida inicial) é aplicado em lpGaugeSet
+  function lpGaugeHtml(kind) {
+    if (kind === 'barra') return '';
+    if (kind === 'pocao') return `<div class="lp-gauge g-potion" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><path class="glass" d="${FLASK_D}"/><rect class="cork" x="38" y="3" width="24" height="10" rx="3"/></svg>
+        <div class="g-fill"><svg viewBox="0 0 100 100"><path class="liquid" d="${FLASK_D}"/><path class="liquid-hi" d="M25 70 C25 61 31 54 39 50"/>
+          <circle class="bub" cx="42" cy="88" r="2.6"/><circle class="bub b2" cx="57" cy="90" r="2"/><circle class="bub b3" cx="63" cy="84" r="1.6"/></svg></div>
+        <svg viewBox="0 0 100 100"><path class="outline" d="${FLASK_D}"/><path class="shine" d="M27 72 C27 62 32 55 40 50"/></svg>
+      </div>`;
+    if (kind === 'bateria') return `<div class="lp-gauge g-battery" aria-hidden="true"><svg viewBox="0 0 100 100">
+        <rect class="body" x="7" y="30" width="80" height="42" rx="8"/><rect class="term" x="88" y="42" width="7" height="18" rx="2.5"/>
+        ${[0, 1, 2, 3, 4].map(k => `<rect class="seg" x="${12.5 + k * 14.4}" y="35.5" width="11.4" height="31" rx="2.5"/>`).join('')}
+        <path class="bolt" d="M52 22 L37 54 H48 L43 80 L63 45 H51 Z"/></svg></div>`;
+    if (kind === 'vela') return `<div class="lp-gauge g-candle" aria-hidden="true"><span class="c-glow"></span><span class="c-plate"></span><span class="c-body"></span><span class="c-wick"></span><span class="c-flame"></span></div>`;
+    return `<div class="lp-gauge g-heart" aria-hidden="true">
+        <svg class="g-back" viewBox="0 0 24 24"><path d="${HEART_D}"/></svg>
+        <div class="g-fill"><svg viewBox="0 0 24 24"><path d="${HEART_D}"/></svg></div>
+        <svg class="g-front" viewBox="0 0 24 24"><path d="${HEART_D}"/></svg>
+      </div>`;
+  }
+  // coração e poção esvaziam de cima para baixo; barra encolhe com rastro; bateria apaga segmentos; vela derrete
+  function lpGaugeSet(card, v, start, heal) {
+    const r = clamp(v / start, 0, 1), kind = card.dataset.gauge;
+    card.classList.toggle('over', v > start);
+    card.classList.toggle('low', v > 0 && r <= .25);
+    card.classList.toggle('mid', r > .25 && r <= .5);
+    if (kind === 'coracao' || kind === 'pocao') {
+      const [top, bottom] = kind === 'coracao' ? [15.8, 87.5] : [37, 95]; // altura do desenho, em %
+      const inset = `inset(${(top + (1 - r) * (bottom - top)).toFixed(2)}% 0 0 0)`;
+      const f = card.querySelector('.g-fill');
+      f.style.clipPath = inset; f.style.webkitClipPath = inset;
+    } else if (kind === 'barra') {
+      const trail = card.querySelector('.b-trail');
+      trail.style.transitionDelay = heal ? '0s' : '';
+      card.querySelector('.b-main').style.width = trail.style.width = (r * 100).toFixed(2) + '%';
+    } else if (kind === 'bateria') {
+      const on = v > 0 ? Math.ceil(r * 5 - 1e-9) : 0;
+      card.querySelectorAll('.seg').forEach((sg, k) => sg.classList.toggle('on', k < on));
+    } else if (kind === 'vela') {
+      card.querySelector('.g-candle').style.setProperty('--h', (6 + r * 56).toFixed(2) + '%');
+    }
+  }
+
+  function lpCardHtml(i, v, rot, kind) {
     const c = lpColor(i), who = `Jogador ${i + 1}`, text = lpFmt(v);
-    return `<div class="lp-card${text.length > 2 ? ' long' : ''}${v <= 0 ? ' out' : ''}" data-i="${i}" role="group" aria-label="${who}" style="--pc:${c};--pc-ink:${readableOn(c)}">
+    const bar = kind === 'barra' ? '<div class="g-bar" aria-hidden="true"><span class="b-trail"></span><span class="b-main"></span><span class="b-shine"></span></div>' : '';
+    return `<div class="lp-card${text.length > 2 ? ' long' : ''}${v <= 0 ? ' out' : ''}" data-i="${i}" data-gauge="${kind}" role="group" aria-label="${who}" style="--pc:${c};--pc-ink:${readableOn(c)}">
       <div class="lp-face" data-rot="${rot}" style="--rot:${rot}deg">
-        <svg class="lp-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART_D}"/></svg>
+        ${lpGaugeHtml(kind)}
         <span class="lp-flash" aria-hidden="true"></span>
         <span class="lp-who" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#meeple" fill="${c}"/></svg>J${i + 1}</span>
         <button type="button" class="lp-btn lp-dec" data-d="-1" aria-label="Tirar 1 de vida do ${who}"><span class="pm">${PM_SVG('M5 12h14')}</span></button>
         <button type="button" class="lp-btn lp-inc" data-d="1" aria-label="Dar 1 de vida ao ${who}"><span class="pm">${PM_SVG('M5 12h14M12 5v14')}</span></button>
-        <div class="lp-num"><output class="lp-val" aria-live="polite">${text}</output><span class="lp-delta" aria-hidden="true"></span></div>
+        <div class="lp-num">${bar}<output class="lp-val" aria-live="polite">${text}</output><span class="lp-delta" aria-hidden="true"></span></div>
       </div>
     </div>`;
   }
@@ -2559,9 +2711,11 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     grid.className = 'lp-grid ' + arr.mode;
     grid.style.gridTemplateColumns = grid.style.gridTemplateRows = '';
     const hub = '<button type="button" class="lp-hub" aria-label="Menu do LP" aria-haspopup="dialog"><span class="logo" aria-hidden="true"></span></button>';
+    const kind = LP().gauge;
     grid.innerHTML = (arr.mode === 'flat'
-      ? g.lives.map((v, i) => lpCardHtml(i, v, 0)).join('')
-      : arr.sides.map(sd => `<div class="lp-side">${sd.list.map(i => lpCardHtml(i, g.lives[i], sd.rot)).join('')}</div>`).join('')) + hub;
+      ? g.lives.map((v, i) => lpCardHtml(i, v, 0, kind)).join('')
+      : arr.sides.map(sd => `<div class="lp-side">${sd.list.map(i => lpCardHtml(i, g.lives[i], sd.rot, kind)).join('')}</div>`).join('')) + hub;
+    grid.querySelectorAll('.lp-card').forEach(c => lpGaugeSet(c, g.lives[Number(c.dataset.i)], g.start, true));
     lpLayout();
     syncFacing();
     keepAwake();
@@ -2581,9 +2735,12 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
     card.querySelector('.lp-val').textContent = text;
     card.classList.toggle('long', text.length > 2);
     card.classList.toggle('out', g.lives[i] <= 0);
-    // o coração pulsa quando ganha vida e treme quando perde
+    lpGaugeSet(card, g.lives[i], g.start, real > 0);
+    // o marcador pulsa quando ganha vida e treme quando perde
     const face = card.querySelector('.lp-face');
     face.classList.remove('beat', 'hit'); void face.offsetWidth; face.classList.add(real > 0 ? 'beat' : 'hit');
+    clearTimeout(face.lpAnim);
+    face.lpAnim = setTimeout(() => face.classList.remove('beat', 'hit'), 460);
     // diferença acumulada enquanto os toques continuam; 2 s sem tocar e ela some
     const st = lpDeltas[i] || (lpDeltas[i] = { sum: 0, timer: null });
     st.sum += real;
