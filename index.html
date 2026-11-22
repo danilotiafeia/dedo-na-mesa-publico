@@ -185,6 +185,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 .screen input{-webkit-user-select:text;user-select:text}
 .screen-inner{max-width:30rem;margin:0 auto;display:grid;gap:1.5rem}
 .screen-title{font-family:var(--font-display);font-weight:400;font-size:2.1rem;margin:0;line-height:1.05}
+.screen-head{position:relative;padding-right:3.4rem}
+.screen-logo{position:absolute;top:0;right:0;width:2.6rem;height:2.6rem;border-radius:.8rem;box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 0 1px rgba(240,246,246,.14)}
 .screen-sub{margin:.35rem 0 0;color:var(--muted);font-size:.95rem;line-height:1.45;max-width:36ch}
 .label{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 .6rem}
 .primary{
@@ -632,7 +634,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 <!-- Ampulheta: escolha do tempo -->
 <section class="screen" id="screen-timer" hidden aria-labelledby="timer-title">
   <div class="screen-inner">
-    <header>
+    <header class="screen-head">
+      <span class="logo screen-logo" aria-hidden="true"></span>
       <h2 class="screen-title" id="timer-title">Ampulheta</h2>
       <p class="screen-sub" id="timer-sub">Escolha o tempo do turno. Na tela seguinte, toque em qualquer lugar para começar.</p>
     </header>
@@ -721,7 +724,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 <!-- Dados: configuração -->
 <section class="screen" id="screen-dice" hidden aria-labelledby="dice-title">
   <div class="screen-inner">
-    <header>
+    <header class="screen-head">
+      <span class="logo screen-logo" aria-hidden="true"></span>
       <h2 class="screen-title" id="dice-title">Dados</h2>
       <p class="screen-sub">Todos usam o mesmo tipo de dado, cada um na sua cor. A quantidade é escolhida por jogador.</p>
     </header>
@@ -755,7 +759,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 <!-- Placar: definição -->
 <section class="screen" id="screen-score" hidden aria-labelledby="score-title">
   <div class="screen-inner">
-    <header>
+    <header class="screen-head">
+      <span class="logo screen-logo" aria-hidden="true"></span>
       <h2 class="screen-title" id="score-title">Placar</h2>
       <p class="screen-sub">Monte a tabela da partida. O app soma os pontos e desconta as penalidades.</p>
     </header>
@@ -818,7 +823,8 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
 <!-- LP: definição -->
 <section class="screen" id="screen-lp" hidden aria-labelledby="lp-title">
   <div class="screen-inner">
-    <header>
+    <header class="screen-head">
+      <span class="logo screen-logo" aria-hidden="true"></span>
       <h2 class="screen-title" id="lp-title">LP</h2>
       <p class="screen-sub">Contador de pontos de vida. Escolha os jogadores e a vida inicial; na tela seguinte, toque em − e + para mudar a vida de cada um.</p>
     </header>
@@ -1049,6 +1055,39 @@ body[data-screen="draw"][data-touching="true"] .tabbar{opacity:0;pointer-events:
       <path d="M73 45 Q71 34 60 36 Q53 40 55 50 Q59 59 68 55 Q75 51 73 45 Z" fill="${O}"/>
       <path d="M50 57 L44 68 H56 Z" fill="${O}"/>
       <path d="M38 75 V88 M46 75 V88 M54 75 V88 M62 75 V88" stroke="${O}" stroke-width="3"/>` },
+    // temática comunista
+    { id: 'foice-martelo', name: 'Foice e martelo', svg: (F, O) => `
+      <path d="M31 66 L15 82" stroke="${O}" stroke-width="15" stroke-linecap="round"/>
+      <path d="M31 66 L15 82" stroke="${darken(F, .35)}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M25.1 72.9 A38 38 0 1 0 19.1 27 A25 25 0 1 1 33 65 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M43 43 L83 83" stroke="${O}" stroke-width="15" stroke-linecap="round"/>
+      <path d="M43 43 L83 83" stroke="${darken(F, .35)}" stroke-width="7" stroke-linecap="round"/>
+      <g transform="rotate(-45 37 37)"><rect x="16" y="27.5" width="42" height="19" rx="3.5" fill="${F}" stroke="${O}" ${S}/></g>` },
+    { id: 'estrela', name: 'Estrela', svg: (F, O) => {
+      const pt = (rad, k) => { const a = -Math.PI / 2 + k * Math.PI / 5; return [50 + rad * Math.cos(a), 53 + rad * Math.sin(a)]; };
+      const xy = p => p[0].toFixed(1) + ',' + p[1].toFixed(1);
+      let facets = '';
+      for (let k = 0; k < 10; k += 2) {
+        const tip = pt(46, k), l = pt(18.5, k - 1), r = pt(18.5, k + 1);
+        facets += `<polygon points="50,53 ${xy(l)} ${xy(tip)}" fill="${lighten(F, .28)}"/><polygon points="50,53 ${xy(tip)} ${xy(r)}" fill="${darken(F, .12)}"/>`;
+        facets += `<path d="M50 53 L${xy(tip)}" stroke="${O}" stroke-width="2" opacity=".35"/>`;
+      }
+      return facets + `<polygon points="${starPts(50, 53, 46, 18.5)}" fill="none" stroke="${O}" ${S}/>`; } },
+    { id: 'punho', name: 'Punho', svg: (F, O) => `
+      <path d="M36 97 V68 H64 V97" fill="${darken(F, .12)}" stroke="${O}" ${S}/>
+      <rect x="23" y="30" width="54" height="44" rx="13" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="23" y="14" width="14" height="32" rx="7" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="36.5" y="10" width="14" height="34" rx="7" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="50" y="11" width="14" height="33" rx="7" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="63" y="15" width="14" height="31" rx="7" fill="${F}" stroke="${O}" ${S}/>
+      <rect x="17" y="45" width="50" height="16" rx="8" fill="${lighten(F, .14)}" stroke="${O}" ${S}/>
+      <path d="M55 49.5 Q60 49.5 61 53" fill="none" stroke="${O}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>` },
+    { id: 'bandeira', name: 'Bandeira', svg: (F, O) => `
+      <path d="M24 13 Q41 4 57 13 T90 13 V58 Q74 49 57 58 T24 58 Z" fill="${F}" stroke="${O}" ${S}/>
+      <path d="M30 20 Q44 13 57 20" fill="none" stroke="${lighten(F, .35)}" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      <polygon points="${starPts(40, 30, 9, 3.7)}" fill="#f5c330" stroke="${O}" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="14" y="8" width="10" height="88" rx="4" fill="#b98552" stroke="${O}" stroke-width="4"/>
+      <circle cx="19" cy="7" r="6.5" fill="#f5c330" stroke="${O}" stroke-width="4"/>` },
     // não é um desenho: cada dedo recebe um símbolo diferente sorteado da lista acima
     { id: 'aleatorio', name: 'Aleatório', random: true, svg: (F, O) => `
       <rect x="10" y="10" width="80" height="80" rx="20" fill="${F}" stroke="${O}" ${S}/>
